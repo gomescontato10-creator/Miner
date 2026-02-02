@@ -12,7 +12,8 @@
         body { background: var(--bg); margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
         /* Tela de Login */
-        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
+        .login-box { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--acc); width: 100%; max-width: 350px; }
         
         /* Header Stats */
         header { background: #000; padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-bottom: 2px solid var(--acc); }
@@ -26,7 +27,7 @@
         .tab.active { display: block; }
         
         /* Mina */
-        .click-area { height: 200px; display: flex; align-items: center; justify-content: center; font-size: 100px; cursor: pointer; user-select: none; transition: transform 0.1s; }
+        .click-area { height: 180px; display: flex; align-items: center; justify-content: center; font-size: 80px; cursor: pointer; user-select: none; transition: transform 0.1s; }
         .click-area:active { transform: scale(0.9); }
 
         /* Cards e Listas */
@@ -36,24 +37,28 @@
         /* Chat */
         #chat-box { height: 200px; background: #000; border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 13px; border-radius: 10px; margin-bottom: 10px; }
         .msg { margin-bottom: 5px; line-height: 1.4; }
-        .msg-sys { color: var(--gold); font-weight: bold; font-style: italic; }
+        .msg-sys { color: var(--gold); font-weight: bold; }
 
         /* Nav */
         nav { display: flex; background: #000; height: 65px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #222; }
         .nav-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #444; }
         .nav-item.active { color: var(--acc); }
 
-        .btn { background: var(--acc); color: #000; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        input { background: #111; border: 1px solid #333; padding: 12px; width: 100%; margin: 8px 0; border-radius: 8px; font-size: 16px; }
+        .btn { background: var(--acc); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; font-size: 16px; }
+        input { background: #111; border: 1px solid #333; padding: 12px; width: 100%; margin: 5px 0; border-radius: 8px; font-size: 16px; color: #fff; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
-    <h1 style="color: var(--acc); font-family: 'Orbitron'; font-size: 28px;">MINER 50W</h1>
-    <p>Escolha seu codinome de mineiro</p>
-    <input id="auth-user" placeholder="Seu Nome">
-    <button class="btn" style="width: 100%; font-size: 18px;" onclick="game.start()">ENTRAR NA MINA</button>
+    <div class="login-box">
+        <h1 style="color: var(--acc); font-family: 'Orbitron'; font-size: 24px; margin-top:0;">MINER 50W</h1>
+        <p style="font-size: 14px; margin-bottom: 15px;">Acesse sua conta para minerar</p>
+        <input id="auth-user" type="text" placeholder="Usuário">
+        <input id="auth-pass" type="password" placeholder="Senha">
+        <button class="btn" onclick="game.start()">ENTRAR / CRIAR</button>
+        <p style="font-size: 11px; color: #666; margin-top: 10px;">Suas moedas são salvas neste dispositivo.</p>
+    </div>
 </div>
 
 <header>
@@ -71,9 +76,9 @@
         <center>
             <h2 id="w-name" style="color: var(--xp); margin-bottom: 0;">MUNDO 1</h2>
             <div class="click-area" onclick="game.mine()">⛏️</div>
-            <button class="btn" style="width: 90%; background: var(--gold); padding: 15px; font-size: 20px;" onclick="game.sell()">VENDER MINÉRIOS</button>
-            <div style="margin-top: 20px;">
-                <label style="font-size: 18px;"><input type="checkbox" id="auto-check" onchange="game.toggleAuto()"> AUTO-MINER</label>
+            <button class="btn" style="background: var(--gold); font-size: 18px;" onclick="game.sell()">VENDER MINÉRIOS</button>
+            <div style="margin-top: 15px;">
+                <label style="font-size: 18px;"><input type="checkbox" id="auto-check" onchange="game.toggleAuto()" style="width: auto;"> AUTO-MINER</label>
             </div>
         </center>
     </div>
@@ -87,11 +92,11 @@
         <h3 style="border-left: 4px solid var(--acc); padding-left: 10px;">UPGRADES</h3>
         <div class="card">
             <div><b>Velocidade Auto</b><br><small id="info-speed">Atual: 1.0s</small></div>
-            <button class="btn" id="btn-up-speed" onclick="game.buySpeed()">$1.0k</button>
+            <button class="btn" style="width:auto;" id="btn-up-speed" onclick="game.buySpeed()">$1.0k</button>
         </div>
         <div class="card">
             <div><b>Multiplicador XP</b><br><small id="info-xp">Atual: 1x</small></div>
-            <button class="btn" id="btn-up-xp" onclick="game.buyXp()">$500</button>
+            <button class="btn" style="width:auto;" id="btn-up-xp" onclick="game.buyXp()">$500</button>
         </div>
     </div>
 
@@ -100,7 +105,7 @@
         <div id="chat-box"></div>
         <div style="display: flex; gap: 5px;">
             <input id="chat-in" placeholder="Diga algo...">
-            <button class="btn" onclick="game.sendChat()">ENVIAR</button>
+            <button class="btn" style="width:auto; margin-top:0;" onclick="game.sendChat()">ENVIAR</button>
         </div>
     </div>
 </div>
@@ -113,13 +118,12 @@
 </nav>
 
 <script>
-// CONFIGURAÇÃO DA SUA API ABLY
 const ABLY_KEY = 'UhNj3w.aNaMJw:_GCHvcVsSZqK40m3oBBWiYisU6Sc2j6QU7mcD2QNI48';
 const ably = new Ably.Realtime(ABLY_KEY);
 const channel = ably.channels.get('miner-50w-global');
 
 const game = {
-    user: '', gold: 0, bag: 0, lv: 1, xp: 0, 
+    user: '', pass: '', gold: 0, bag: 0, lv: 1, xp: 0, 
     xpMulti: 1, autoSpeed: 1000, curWorld: 0, autoTimer: null,
     suffixes: ['','k','M','B','T','Qa','Qi','Sx','Sp','Oc'],
 
@@ -131,6 +135,12 @@ const game = {
         }));
         this.renderWorlds();
         this.setupNetwork();
+        
+        // Auto-preencher se já logou antes
+        if(localStorage.getItem('miner_user')) {
+            document.getElementById('auth-user').value = localStorage.getItem('miner_user');
+            document.getElementById('auth-pass').value = localStorage.getItem('miner_pass');
+        }
     },
 
     f(n) {
@@ -140,9 +150,15 @@ const game = {
     },
 
     start() {
-        const name = document.getElementById('auth-user').value.trim();
-        if (!name) return alert("Digite um nome!");
-        this.user = name;
+        const u = document.getElementById('auth-user').value.trim();
+        const p = document.getElementById('auth-pass').value.trim();
+        if (!u || !p) return alert("Preencha Usuário e Senha!");
+        
+        this.user = u;
+        this.pass = p;
+        localStorage.setItem('miner_user', u);
+        localStorage.setItem('miner_pass', p);
+
         document.getElementById('auth-screen').style.display = 'none';
         channel.presence.enter({ user: this.user });
         channel.publish('msg', { sys: true, txt: `${this.user} entrou na mina!` });
@@ -227,7 +243,7 @@ const game = {
             html += `
                 <div class="card ${isLocked ? 'locked' : ''}">
                     <div><b>${w.n}</b><br><small>Requer LV ${w.req}</small></div>
-                    <button class="btn" onclick="game.travel(${i})" ${isLocked ? 'disabled' : ''}>
+                    <button class="btn" style="width:auto;" onclick="game.travel(${i})" ${isLocked ? 'disabled' : ''}>
                         ${isLocked ? '🔒' : 'VIAJAR'}
                     </button>
                 </div>
@@ -238,7 +254,7 @@ const game = {
 
     travel(i) {
         this.curWorld = i;
-        document.querySelectorAll('.nav-item')[0].click();
+        this.tab('t-mina', document.querySelectorAll('.nav-item')[0]);
         this.update();
     },
 
@@ -254,7 +270,6 @@ const game = {
         document.getElementById('info-speed').innerText = `Atual: ${(this.autoSpeed/1000).toFixed(1)}s`;
         document.getElementById('info-xp').innerText = `Atual: ${this.xpMulti}x`;
         
-        // Atualiza botões
         let sCost = 1000 * Math.pow(2.5, (1000 - this.autoSpeed) / 100);
         let xCost = 500 * Math.pow(2, this.xpMulti);
         document.getElementById('btn-up-speed').innerText = '$' + this.f(sCost);
