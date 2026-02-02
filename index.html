@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MINER 50W - FIXED ECO</title>
+    <title>MINER 50W - MULTIPLAYER V1</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
@@ -21,7 +21,7 @@
         #xp-bar { background: var(--xp); height: 100%; width: 0%; transition: 0.3s; }
         #xp-txt { position: absolute; width: 100%; text-align: center; font-size: 11px; font-weight: bold; line-height: 18px; text-shadow: 1px 1px #000; }
 
-        #event-banner { background: var(--evt); color: #fff; text-align: center; font-weight: bold; padding: 5px; font-size: 12px; display: none; border-bottom: 1px solid #fff; }
+        #event-banner { background: var(--evt); color: #fff; text-align: center; font-weight: bold; padding: 5px; font-size: 12px; display: none; }
 
         .content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
         .tab { display: none; } .tab.active { display: block; }
@@ -73,23 +73,17 @@
 <div class="content">
     <div id="tab-mine" class="tab active">
         <div style="text-align:center; padding:20px 0;">
-            <div id="click-area" onclick="core.mine()" style="font-size:100px; cursor:pointer;">⛏️</div>
+            <div id="click-area" onclick="core.mine()" style="font-size:100px; cursor:pointer; user-select: none;">⛏️</div>
             <button class="btn btn-main" style="margin-top:20px; padding:20px;" onclick="core.sell()">VENDER MINÉRIOS</button>
         </div>
         <div class="game-card"><div id="pet-summary">🐾 0 PETS (+0 PWR)</div></div>
     </div>
 
-    <div id="tab-worlds" class="tab">
-        <h3 style="color:var(--acc)">MUNDOS (50)</h3>
-        <div id="world-list"></div>
-    </div>
-
-    <div id="tab-eggs" class="tab">
-        <h3 style="color:var(--acc)">LOJA DE OVOS (30)</h3>
-        <div id="egg-list"></div>
-    </div>
-
+    <div id="tab-worlds" class="tab"><div id="world-list"></div></div>
+    <div id="tab-eggs" class="tab"><div id="egg-list"></div></div>
+    
     <div id="tab-rank" class="tab">
+        <h3 style="color:var(--acc)">RANKING GLOBAL</h3>
         <table class="rank-table">
             <thead><tr><th>JOGADOR</th><th>LV</th><th>MUNDO</th><th>$</th></tr></thead>
             <tbody id="rank-body"></tbody>
@@ -98,17 +92,16 @@
 
     <div id="tab-chat" class="tab">
         <div id="chat-box" style="height:300px; background:#000; overflow-y:auto; padding:10px; border:1px solid #222; margin-bottom:10px;"></div>
-        <div style="display:flex; gap:5px;"><input type="text" id="chat-in" placeholder="Diga algo..."><button class="btn btn-main" style="width:70px;" onclick="core.sendMsg()">OK</button></div>
+        <div style="display:flex; gap:5px;"><input type="text" id="chat-in" placeholder="Sua mensagem..."><button class="btn btn-main" style="width:70px;" onclick="core.sendMsg()">OK</button></div>
     </div>
 </div>
 
 <div id="modal-admin" class="modal">
     <div class="game-card">
-        <h2 style="color:var(--xp)">PAINEL MESTRE</h2>
-        <h3 style="color:var(--evt)">EVENTO GLOBAL</h3>
+        <h2 style="color:var(--xp)">ADMIN PANEL</h2>
         <input type="text" id="evt-title" placeholder="NOME DO EVENTO">
         <input type="number" id="evt-time" placeholder="TEMPO (S)">
-        <input type="number" id="evt-mult" placeholder="MULT (EX: 2)">
+        <input type="number" id="evt-mult" placeholder="MULTIPLICADOR">
         <select id="evt-type">
             <option value="both">DINHEIRO E XP</option>
             <option value="gold">SÓ DINHEIRO</option>
@@ -117,9 +110,9 @@
         <button class="btn btn-main" style="background:var(--evt); color:#fff;" onclick="core.startEvent()">LANÇAR EVENTO</button>
         <hr style="border:0; border-top:1px solid #444; margin: 15px 0;">
         <select id="adm-target"><option value="ALL">TODOS</option></select>
-        <input type="text" id="adm-cash-val" placeholder="QUANTIA (EX: 1M)">
+        <input type="text" id="adm-cash-val" placeholder="VALOR (EX: 1M)">
         <button class="btn btn-main" onclick="core.admGive()">DAR DINHEIRO</button>
-        <button class="btn btn-sub" style="width:100%;" onclick="document.getElementById('modal-admin').style.display='none'">FECHAR</button>
+        <button class="btn btn-sub" onclick="document.getElementById('modal-admin').style.display='none'">FECHAR</button>
     </div>
 </div>
 
@@ -133,7 +126,7 @@
 
 <script>
 const core = {
-    data: { user:'', gold:0, bag:0, xp:0, lv:1, world:1, rb:0, ups:{f:0, m:0, a:0}, pets:[] },
+    data: { user:'', gold:0, bag:0, xp:0, lv:1, world:1, rb:0, pets:[] },
     players: [],
     chan: null,
     event: { active: false, time: 0, mult: 1, type: 'both', name: '' },
@@ -157,25 +150,50 @@ const core = {
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value.trim();
         if(!u) return;
-        let db = JSON.parse(localStorage.getItem('M50W_FINAL') || '{}');
-        if(mode === 'reg') { db[u] = { ...this.data, user:u, pass:p }; localStorage.setItem('M50W_FINAL', JSON.stringify(db)); alert("Conta Criada!"); }
-        if(db[u] && db[u].pass === p) { this.data = db[u]; document.getElementById('auth-screen').style.display = 'none'; this.init(); }
+        let db = JSON.parse(localStorage.getItem('M50W_GLOBAL_DATA') || '{}');
+        if(mode === 'reg') {
+            if(db[u]) return alert("Usuário já existe!");
+            db[u] = { ...this.data, user:u, pass:p };
+            localStorage.setItem('M50W_GLOBAL_DATA', JSON.stringify(db));
+            alert("Criado com sucesso!");
+        }
+        if(db[u] && db[u].pass === p) {
+            this.data = db[u];
+            document.getElementById('auth-screen').style.display = 'none';
+            this.init();
+        } else if(mode === 'login') alert("Senha incorreta!");
     },
 
     init() {
+        // Conexão única para todos os jogadores
         const ably = new Ably.Realtime('UhNj3w.aNaMJw:_GCHvcVsSZqK40m3oBBWiYisU6Sc2j6QU7mcD2QNI48');
-        this.chan = ably.channels.get('v5_stable');
+        this.chan = ably.channels.get('global_server_v1');
+        
         this.chan.subscribe(m => {
             if(m.name === 'chat') this.addMsg(m.data.u, m.data.t);
-            if(m.name === 'gift' && (m.data.to === 'ALL' || m.data.to === this.data.user)) { this.data.gold += m.data.v; this.updateUI(); }
-            if(m.name === 'p') this.upPlayers(m.data);
-            if(m.name === 'evt_start') this.triggerLocalEvent(m.data);
+            if(m.name === 'gift' && (m.data.to === 'ALL' || m.data.to === this.data.user)) {
+                this.data.gold += m.data.v;
+                this.updateUI();
+                this.save();
+            }
+            if(m.name === 'sync') this.upRank(m.data);
+            if(m.name === 'event') this.triggerEvent(m.data);
         });
-        
+
+        // Loop de sincronização (Envia seus dados para os outros)
+        setInterval(() => {
+            this.chan.publish('sync', { u: this.data.user, l: this.data.lv, w: this.data.world, g: this.data.gold });
+        }, 3000);
+
         setInterval(() => this.tickEvent(), 1000);
-        setInterval(() => { this.chan.publish('p', { u: this.data.user, l: this.data.lv, w: this.data.world, g: this.data.gold }); }, 4000);
         this.renderAll();
         this.updateUI();
+    },
+
+    save() {
+        let db = JSON.parse(localStorage.getItem('M50W_GLOBAL_DATA') || '{}');
+        db[this.data.user] = this.data;
+        localStorage.setItem('M50W_GLOBAL_DATA', JSON.stringify(db));
     },
 
     mine() {
@@ -187,44 +205,47 @@ const core = {
         if(this.event.active && (this.event.type === 'xp' || this.event.type === 'both')) xpGain *= this.event.mult;
         
         this.data.xp += xpGain;
-        this.check();
+        this.checkLv();
         this.updateUI();
     },
 
     sell() {
-        // MUNDO 1 agora começa dando 50 por minério.
-        let worldMult = 50 * Math.pow(25, this.data.world - 1);
-        let eventMult = (this.event.active && (this.event.type === 'gold' || this.event.type === 'both')) ? this.event.mult : 1;
+        let mult = 50 * Math.pow(25, this.data.world - 1);
+        if(this.event.active && (this.event.type === 'gold' || this.event.type === 'both')) mult *= this.event.mult;
         
-        this.data.gold += this.data.bag * worldMult * eventMult;
+        this.data.gold += this.data.bag * mult;
         this.data.bag = 0;
-        this.updateUI();
         this.save();
+        this.updateUI();
     },
 
-    check() {
+    checkLv() {
         let next = 100 * Math.pow(this.data.lv, 1.4);
         if(this.data.xp >= next) {
             this.data.lv++;
             this.data.xp = 0;
-            this.data.world = Math.min(50, Math.floor(this.data.lv / 20) + 1);
+            this.data.world = Math.floor((this.data.lv - 1) / 20) + 1;
+            this.save();
             this.renderAll();
         }
     },
 
+    // MULTIPLAYER E ADMIN
     startEvent() {
-        this.chan.publish('evt_start', {
-            name: document.getElementById('evt-title').value || 'Evento',
-            time: parseInt(document.getElementById('evt-time').value) || 60,
-            mult: parseFloat(document.getElementById('evt-mult').value) || 2,
+        const d = {
+            n: document.getElementById('evt-title').value || 'Evento',
+            t: parseInt(document.getElementById('evt-time').value) || 60,
+            m: parseFloat(document.getElementById('evt-mult').value) || 2,
             type: document.getElementById('evt-type').value
-        });
+        };
+        this.chan.publish('event', d);
+        document.getElementById('modal-admin').style.display='none';
     },
 
-    triggerLocalEvent(d) {
-        this.event = { active: true, ...d };
+    triggerEvent(d) {
+        this.event = { active: true, name: d.n, time: d.t, mult: d.m, type: d.type };
         document.getElementById('event-banner').style.display = 'block';
-        document.getElementById('evt-name').innerText = d.name.toUpperCase();
+        document.getElementById('evt-name').innerText = d.n.toUpperCase();
     },
 
     tickEvent() {
@@ -238,76 +259,21 @@ const core = {
         }
     },
 
-    save() {
-        let db = JSON.parse(localStorage.getItem('M50W_FINAL') || '{}');
-        db[this.data.user] = this.data;
-        localStorage.setItem('M50W_FINAL', JSON.stringify(db));
-    },
-
-    updateUI() {
-        document.getElementById('st-money').innerText = this.f(this.data.gold);
-        document.getElementById('st-bag').innerText = this.f(this.data.bag);
-        document.getElementById('st-lv').innerText = this.data.lv;
-        document.getElementById('st-world').innerText = this.data.world + "/50";
-        let next = 100 * Math.pow(this.data.lv, 1.4);
-        document.getElementById('xp-bar').style.width = (this.data.xp / next * 100) + "%";
-        document.getElementById('xp-txt').innerText = `${this.f(this.data.xp)} / ${this.f(next)}`;
-        let tp = 0; this.data.pets.forEach(p=>tp+=p.m);
-        document.getElementById('pet-summary').innerText = `🐾 ${this.data.pets.length} PETS (+${this.f(tp)} PWR)`;
-    },
-
-    renderAll() {
-        let e = '';
-        for(let i=1; i<=30; i++) {
-            let cost = 1000 * Math.pow(12, i-1);
-            e += `<div class="game-card">🥚 OVO ${i}<br><small>Pwr: +${this.f(Math.pow(8, i-1)*25)}</small><br><button class="btn btn-main" onclick="core.buyEgg(${i})">$${this.f(cost)}</button></div>`;
-        }
-        document.getElementById('egg-list').innerHTML = e;
-
-        let w = '';
-        const names = ["Terra", "Caverna", "Oceano", "Marte", "Vazio"];
-        for(let i=1; i<=50; i++) {
-            let req = (i-1) * 20;
-            let isLocked = this.data.lv < req;
-            w += `<div class="game-card ${isLocked ? 'locked' : ''}">
-                <b>${i}. ${names[(i-1)%5]}</b><br>
-                <small>REQ: LV ${req} | MULT: ${this.f(50 * Math.pow(25, i-1))}x</small>
-            </div>`;
-        }
-        document.getElementById('world-list').innerHTML = w;
-    },
-
-    buyEgg(i) {
-        let cost = 1000 * Math.pow(12, i-1);
-        if(this.data.gold >= cost) {
-            this.data.gold -= cost;
-            this.data.pets.push({ m: Math.pow(8, i-1) * 25 });
-            this.updateUI();
-        }
-    },
-
-    upPlayers(p) {
-        const idx = this.players.findIndex(x => x.u === p.u);
-        if(idx > -1) this.players[idx] = p; else this.players.push(p);
+    upRank(p) {
+        const i = this.players.findIndex(x => x.u === p.u);
+        if(i > -1) this.players[i] = p; else this.players.push(p);
+        
         let sel = document.getElementById('adm-target');
+        let current = sel.value;
         sel.innerHTML = '<option value="ALL">TODOS</option>';
         this.players.forEach(pl => sel.innerHTML += `<option value="${pl.u}">${pl.u}</option>`);
-    },
-
-    tab(id, el) {
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-        document.getElementById(id).classList.add('active'); el.classList.add('active');
-        if(id === 'tab-rank') {
-            document.getElementById('rank-body').innerHTML = this.players.sort((a,b)=>b.l - a.l).map(p=>`
-                <tr><td>${p.u}</td><td>${p.l}</td><td>${p.w}</td><td style="color:var(--gold)">$${this.f(p.g)}</td></tr>
-            `).join('');
-        }
+        sel.value = current;
     },
 
     sendMsg() {
         let i = document.getElementById('chat-in');
         if(i.value === '/admin') return document.getElementById('modal-admin').style.display='block';
+        if(!i.value) return;
         this.chan.publish('chat', { u: this.data.user, t: i.value });
         i.value = '';
     },
@@ -320,8 +286,58 @@ const core = {
 
     admGive() {
         let to = document.getElementById('adm-target').value;
-        let val = this.parse(document.getElementById('adm-cash-val').value);
-        this.chan.publish('gift', { to, v: val });
+        let v = this.parse(document.getElementById('adm-cash-val').value);
+        this.chan.publish('gift', { to, v });
+    },
+
+    // UI E RENDER
+    updateUI() {
+        document.getElementById('st-money').innerText = this.f(this.data.gold);
+        document.getElementById('st-bag').innerText = this.f(this.data.bag);
+        document.getElementById('st-lv').innerText = this.data.lv;
+        document.getElementById('st-world').innerText = this.data.world;
+        let next = 100 * Math.pow(this.data.lv, 1.4);
+        document.getElementById('xp-bar').style.width = (this.data.xp / next * 100) + "%";
+        document.getElementById('xp-txt').innerText = `${this.f(this.data.xp)} / ${this.f(next)}`;
+        let pwr = 0; this.data.pets.forEach(p=>pwr+=p.m);
+        document.getElementById('pet-summary').innerText = `🐾 ${this.data.pets.length} PETS (+${this.f(pwr)} PWR)`;
+    },
+
+    renderAll() {
+        let w = '';
+        for(let i=1; i<=50; i++) {
+            let req = (i-1) * 20;
+            w += `<div class="game-card ${this.data.lv < req ? 'locked' : ''}"><b>MUNDO ${i}</b><br><small>REQ LV ${req}</small></div>`;
+        }
+        document.getElementById('world-list').innerHTML = w;
+
+        let e = '';
+        for(let i=1; i<=30; i++) {
+            let cost = 1000 * Math.pow(12, i-1);
+            e += `<div class="game-card">🥚 OVO ${i}<br><button class="btn btn-main" onclick="core.buyEgg(${i})">$${this.f(cost)}</button></div>`;
+        }
+        document.getElementById('egg-list').innerHTML = e;
+    },
+
+    buyEgg(i) {
+        let cost = 1000 * Math.pow(12, i-1);
+        if(this.data.gold >= cost) {
+            this.data.gold -= cost;
+            this.data.pets.push({ m: Math.pow(8, i-1) * 25 });
+            this.save();
+            this.updateUI();
+        }
+    },
+
+    tab(id, el) {
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+        document.getElementById(id).classList.add('active'); el.classList.add('active');
+        if(id === 'tab-rank') {
+            document.getElementById('rank-body').innerHTML = this.players.sort((a,b)=>b.g - a.g).map(p=>`
+                <tr><td>${p.u}</td><td>${p.l}</td><td>${p.w}</td><td style="color:var(--gold)">$${this.f(p.g)}</td></tr>
+            `).join('');
+        }
     }
 };
 </script>
