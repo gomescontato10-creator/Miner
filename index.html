@@ -3,115 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MINER TYCOON 50W</title>
+    <title>MINER 50W - ADMIN EDITION</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0a0a12; --card: #161625; --acc: #00ff88; --gold: #ffcc00; --xp: #00ccff; }
+        :root { --bg: #0a0a12; --card: #161625; --acc: #00ff88; --gold: #ffcc00; --xp: #00ccff; --admin: #ff4444; }
         * { box-sizing: border-box; font-family: 'Rajdhani', sans-serif; color: #fff; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* Tela de Login */
-        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
-        .login-box { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--acc); width: 100%; max-width: 350px; }
-        
-        /* Header Stats */
+        /* UI Geral */
         header { background: #000; padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-bottom: 2px solid var(--acc); }
         .stat-box { background: #111; padding: 8px; border-radius: 8px; border: 1px solid #333; text-align: center; font-size: 14px; font-weight: bold; }
         .xp-container { grid-column: span 2; background: #000; height: 12px; border-radius: 6px; border: 1px solid #333; overflow: hidden; position: relative; }
         .xp-fill { height: 100%; background: var(--xp); width: 0%; transition: 0.3s; }
+        .event-bar { display: none; background: var(--gold); color: #000; text-align: center; font-weight: bold; font-size: 12px; padding: 2px; }
 
-        /* Main Content */
+        /* Telas */
+        #auth-screen, #admin-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; }
+        #admin-screen { z-index: 1001; display: none; overflow-y: auto; display: none; }
+        .login-box { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--acc); width: 100%; max-width: 350px; }
+        
         .main { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; }
         .tab { display: none; }
         .tab.active { display: block; }
         
         /* Mina */
-        .click-area { height: 180px; display: flex; align-items: center; justify-content: center; font-size: 80px; cursor: pointer; user-select: none; transition: transform 0.1s; }
+        .click-area { height: 160px; display: flex; align-items: center; justify-content: center; font-size: 80px; cursor: pointer; user-select: none; }
         .click-area:active { transform: scale(0.9); }
 
-        /* Cards e Listas */
-        .card { background: var(--card); border: 1px solid #333; padding: 12px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .locked { opacity: 0.4; filter: grayscale(1); }
-
+        .card { background: var(--card); border: 1px solid #333; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        
         /* Chat */
-        #chat-box { height: 200px; background: #000; border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 13px; border-radius: 10px; margin-bottom: 10px; }
-        .msg { margin-bottom: 5px; line-height: 1.4; }
+        #chat-box { height: 180px; background: #000; border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 13px; border-radius: 10px; margin-bottom: 5px; }
         .msg-sys { color: var(--gold); font-weight: bold; }
+        .msg-admin { color: var(--admin); font-weight: bold; }
 
-        /* Nav */
-        nav { display: flex; background: #000; height: 65px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #222; }
+        /* Botões */
+        .btn { background: var(--acc); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; margin: 4px 0; }
+        .btn-admin { background: var(--admin); color: #fff; }
+        input, select { background: #111; border: 1px solid #333; padding: 10px; width: 100%; margin: 4px 0; border-radius: 8px; color: #fff; }
+
+        nav { display: flex; background: #000; height: 60px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #222; }
         .nav-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #444; }
         .nav-item.active { color: var(--acc); }
-
-        .btn { background: var(--acc); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; font-size: 16px; }
-        input { background: #111; border: 1px solid #333; padding: 12px; width: 100%; margin: 5px 0; border-radius: 8px; font-size: 16px; color: #fff; }
     </style>
 </head>
 <body>
 
+<div id="event-msg" class="event-bar">EVENTO ATIVO: 2x DINHEIRO!</div>
+
 <div id="auth-screen">
     <div class="login-box">
-        <h1 style="color: var(--acc); font-family: 'Orbitron'; font-size: 24px; margin-top:0;">MINER 50W</h1>
-        <p style="font-size: 14px; margin-bottom: 15px;">Acesse sua conta para minerar</p>
+        <h1 style="color: var(--acc);">MINER 50W</h1>
         <input id="auth-user" type="text" placeholder="Usuário">
         <input id="auth-pass" type="password" placeholder="Senha">
-        <button class="btn" onclick="game.start()">ENTRAR / CRIAR</button>
-        <p style="font-size: 11px; color: #666; margin-top: 10px;">Suas moedas são salvas neste dispositivo.</p>
+        <button class="btn" onclick="game.start()">LOGAR / CRIAR</button>
+    </div>
+</div>
+
+<div id="admin-screen">
+    <div class="login-box" style="border-color: var(--admin); max-width: 90%;">
+        <h2 style="color: var(--admin);">PAINEL CONTROLE</h2>
+        
+        <label>Alvo:</label>
+        <select id="adm-target"><option value="all">TODOS</option></select>
+        
+        <label>Dar Recurso:</label>
+        <div style="display:flex; gap:5px;">
+            <input id="adm-val" placeholder="Ex: 1k, 500, 1Sx">
+            <button class="btn" style="width:70px" onclick="game.admGive('gold')">💰</button>
+            <button class="btn" style="width:70px" onclick="game.admGive('xp')">✨</button>
+        </div>
+
+        <hr style="border: 0.5px solid #333; margin: 15px 0;">
+        
+        <label>Criar Evento:</label>
+        <input id="ev-name" placeholder="Nome do Evento">
+        <input id="ev-time" type="number" placeholder="Duração (Segundos)">
+        <select id="ev-type">
+            <option value="gold">2x Dinheiro</option>
+            <option value="xp">2x XP</option>
+            <option value="both">2x Tudo</option>
+        </select>
+        <button class="btn btn-admin" onclick="game.admEvent()">LANÇAR EVENTO</button>
+        
+        <button class="btn" style="background:#444" onclick="document.getElementById('admin-screen').style.display='none'">FECHAR</button>
     </div>
 </div>
 
 <header>
-    <div class="stat-box" style="grid-column: span 2; color: var(--acc);">🟢 ONLINE: <span id="h-online">1</span></div>
+    <div class="stat-box" style="grid-column: span 2;">🟢 ONLINE: <span id="h-online">1</span></div>
     <div class="stat-box">💰 $<span id="h-gold">0</span></div>
     <div class="stat-box">🎒 <span id="h-bag">0</span></div>
     <div class="xp-container">
         <div id="xp-fill" class="xp-fill"></div>
-        <div style="position: absolute; width:100%; text-align:center; font-size:9px; top:0; color: #fff;">LV <span id="h-lv">1</span></div>
+        <div style="position: absolute; width:100%; text-align:center; font-size:9px; top:0;">LV <span id="h-lv">1</span></div>
     </div>
 </header>
 
 <div class="main">
     <div id="t-mina" class="tab active">
         <center>
-            <h2 id="w-name" style="color: var(--xp); margin-bottom: 0;">MUNDO 1</h2>
+            <h2 id="w-name" style="color: var(--xp);">MUNDO 1</h2>
             <div class="click-area" onclick="game.mine()">⛏️</div>
-            <button class="btn" style="background: var(--gold); font-size: 18px;" onclick="game.sell()">VENDER MINÉRIOS</button>
-            <div style="margin-top: 15px;">
-                <label style="font-size: 18px;"><input type="checkbox" id="auto-check" onchange="game.toggleAuto()" style="width: auto;"> AUTO-MINER</label>
-            </div>
+            <button class="btn" style="background:var(--gold); font-size:18px;" onclick="game.sell()">VENDER</button>
+            <br><label><input type="checkbox" id="auto-check" onchange="game.toggleAuto()"> AUTO-MINER</label>
         </center>
     </div>
 
-    <div id="t-worlds" class="tab">
-        <h3 style="border-left: 4px solid var(--xp); padding-left: 10px;">MAPA (50 MUNDOS)</h3>
-        <div id="world-list"></div>
-    </div>
+    <div id="t-worlds" class="tab"><h3>MUNDOS</h3><div id="world-list"></div></div>
 
     <div id="t-up" class="tab">
-        <h3 style="border-left: 4px solid var(--acc); padding-left: 10px;">UPGRADES</h3>
+        <h3>UPGRADES</h3>
         <div class="card">
-            <div><b>Velocidade Auto</b><br><small id="info-speed">Atual: 1.0s</small></div>
-            <button class="btn" style="width:auto;" id="btn-up-speed" onclick="game.buySpeed()">$1.0k</button>
-        </div>
-        <div class="card">
-            <div><b>Multiplicador XP</b><br><small id="info-xp">Atual: 1x</small></div>
-            <button class="btn" style="width:auto;" id="btn-up-xp" onclick="game.buyXp()">$500</button>
+            <div><b>Velocidade</b><br><small id="info-speed">1.0s</small></div>
+            <button class="btn" style="width:80px" onclick="game.buySpeed()">UP</button>
         </div>
     </div>
 
     <div id="t-chat" class="tab">
-        <h3 style="border-left: 4px solid #fff; padding-left: 10px;">CHAT GLOBAL</h3>
         <div id="chat-box"></div>
-        <div style="display: flex; gap: 5px;">
-            <input id="chat-in" placeholder="Diga algo...">
-            <button class="btn" style="width:auto; margin-top:0;" onclick="game.sendChat()">ENVIAR</button>
+        <div style="display:flex; gap:5px;">
+            <input id="chat-in" placeholder="Mensagem...">
+            <button class="btn" style="width:80px" onclick="game.sendChat()">OK</button>
         </div>
     </div>
 </div>
 
 <nav>
-    <div class="nav-item active" onclick="game.tab('t-mina', this)">⛏️</div>
+    <div class="nav-item active" onclick="game.tab('t-mina', this)" id="nav-mine">⛏️</div>
     <div class="nav-item" onclick="game.tab('t-worlds', this)">🌍</div>
     <div class="nav-item" onclick="game.tab('t-up', this)">⚡</div>
     <div class="nav-item" onclick="game.tab('t-chat', this)">💬</div>
@@ -120,27 +140,38 @@
 <script>
 const ABLY_KEY = 'UhNj3w.aNaMJw:_GCHvcVsSZqK40m3oBBWiYisU6Sc2j6QU7mcD2QNI48';
 const ably = new Ably.Realtime(ABLY_KEY);
-const channel = ably.channels.get('miner-50w-global');
+const channel = ably.channels.get('miner-50w-admin');
+const ADMIN_PASS = "admin123";
 
 const game = {
-    user: '', pass: '', gold: 0, bag: 0, lv: 1, xp: 0, 
-    xpMulti: 1, autoSpeed: 1000, curWorld: 0, autoTimer: null,
+    user: '', gold: 0, bag: 0, lv: 1, xp: 0, 
+    xpMulti: 1, goldMulti: 1, autoSpeed: 1000, curWorld: 0,
+    admClicks: 0,
     suffixes: ['','k','M','B','T','Qa','Qi','Sx','Sp','Oc'],
 
     init() {
-        this.worlds = Array.from({length: 50}, (_, i) => ({
-            n: `Mundo ${i+1}`,
-            req: i * 5,
-            mult: Math.pow(2.2, i)
-        }));
+        this.worlds = Array.from({length: 50}, (_, i) => ({ n: `Mundo ${i+1}`, req: i * 5, mult: Math.pow(2.2, i) }));
         this.renderWorlds();
         this.setupNetwork();
         
-        // Auto-preencher se já logou antes
-        if(localStorage.getItem('miner_user')) {
-            document.getElementById('auth-user').value = localStorage.getItem('miner_user');
-            document.getElementById('auth-pass').value = localStorage.getItem('miner_pass');
-        }
+        // Ativador de Admin (5 cliques no ícone da mina no nav)
+        document.getElementById('nav-mine').addEventListener('click', () => {
+            this.admClicks++;
+            if(this.admClicks >= 5) {
+                let p = prompt("SENHA ADMIN:");
+                if(p === ADMIN_PASS) document.getElementById('admin-screen').style.display='flex';
+                this.admClicks = 0;
+            }
+            setTimeout(() => this.admClicks = 0, 2000);
+        });
+    },
+
+    parseVal(str) {
+        let val = parseFloat(str);
+        let suf = str.replace(/[0-9.]/g, '');
+        let idx = this.suffixes.indexOf(suf);
+        if(idx > 0) val *= Math.pow(1000, idx);
+        return val || 0;
     },
 
     f(n) {
@@ -150,111 +181,84 @@ const game = {
     },
 
     start() {
-        const u = document.getElementById('auth-user').value.trim();
-        const p = document.getElementById('auth-pass').value.trim();
-        if (!u || !p) return alert("Preencha Usuário e Senha!");
-        
-        this.user = u;
-        this.pass = p;
-        localStorage.setItem('miner_user', u);
-        localStorage.setItem('miner_pass', p);
-
+        this.user = document.getElementById('auth-user').value;
+        if(!this.user) return;
         document.getElementById('auth-screen').style.display = 'none';
         channel.presence.enter({ user: this.user });
-        channel.publish('msg', { sys: true, txt: `${this.user} entrou na mina!` });
         this.update();
     },
 
     setupNetwork() {
         channel.subscribe('msg', (m) => {
             const box = document.getElementById('chat-box');
-            if (m.data.sys) {
-                box.innerHTML += `<div class="msg msg-sys">📢 ${m.data.txt}</div>`;
-            } else {
-                box.innerHTML += `<div class="msg"><b>${m.data.user}:</b> ${m.data.txt}</div>`;
-            }
+            let cls = m.data.sys ? 'msg-sys' : (m.data.admin ? 'msg-admin' : '');
+            box.innerHTML += `<div class="msg ${cls}"><b>${m.data.user || 'SISTEMA'}:</b> ${m.data.txt}</div>`;
             box.scrollTop = box.scrollHeight;
+        });
+
+        channel.subscribe('admin-cmd', (m) => {
+            if(m.data.target === this.user || m.data.target === 'all') {
+                if(m.data.type === 'gold') this.gold += m.data.val;
+                if(m.data.type === 'xp') this.xp += m.data.val;
+                if(m.data.type === 'event') this.startEvent(m.data);
+                this.update();
+            }
         });
 
         channel.presence.subscribe(() => {
             channel.presence.get((err, members) => {
-                if (!err) document.getElementById('h-online').innerText = members.length;
+                if (!err) {
+                    document.getElementById('h-online').innerText = members.length;
+                    let sel = document.getElementById('adm-target');
+                    sel.innerHTML = '<option value="all">TODOS</option>';
+                    members.forEach(m => sel.innerHTML += `<option value="${m.data.user}">${m.data.user}</option>`);
+                }
             });
         });
     },
 
-    sendChat() {
-        const inp = document.getElementById('chat-in');
-        if (!inp.value) return;
-        channel.publish('msg', { user: this.user, txt: inp.value });
-        inp.value = '';
+    admGive(type) {
+        let v = this.parseVal(document.getElementById('adm-val').value);
+        let t = document.getElementById('adm-target').value;
+        channel.publish('admin-cmd', { type, val: v, target: t });
+        channel.publish('msg', { admin: true, user: 'ADMIN', txt: `Enviou ${this.f(v)} ${type} para ${t}` });
+    },
+
+    admEvent() {
+        let data = {
+            type: 'event',
+            name: document.getElementById('ev-name').value,
+            duration: parseInt(document.getElementById('ev-time').value),
+            mode: document.getElementById('ev-type').value,
+            target: 'all'
+        };
+        channel.publish('admin-cmd', data);
+    },
+
+    startEvent(data) {
+        const bar = document.getElementById('event-msg');
+        bar.style.display = 'block';
+        bar.innerText = `EVENTO: ${data.name} ATIVO!`;
+        if(data.mode === 'gold' || data.mode === 'both') this.goldMulti = 2;
+        if(data.mode === 'xp' || data.mode === 'both') this.xpMulti = 2;
+        
+        setTimeout(() => {
+            bar.style.display = 'none';
+            this.goldMulti = 1; this.xpMulti = 1;
+        }, data.duration * 1000);
     },
 
     mine() {
         this.bag += 1;
         this.xp += 10 * this.xpMulti;
-        let nextXp = 100 * Math.pow(1.4, this.lv);
-        if (this.xp >= nextXp) {
-            this.lv++;
-            this.xp = 0;
-            this.renderWorlds();
-            channel.publish('msg', { sys: true, txt: `${this.user} subiu para o Nível ${this.lv}!` });
-        }
+        let next = 100 * Math.pow(1.4, this.lv);
+        if(this.xp >= next) { this.lv++; this.xp = 0; this.renderWorlds(); }
         this.update();
     },
 
     sell() {
-        if (this.bag <= 0) return;
-        let gain = this.bag * 50 * this.worlds[this.curWorld].mult;
-        this.gold += gain;
+        this.gold += this.bag * 50 * this.worlds[this.curWorld].mult * this.goldMulti;
         this.bag = 0;
-        this.update();
-    },
-
-    buySpeed() {
-        let cost = 1000 * Math.pow(2.5, (1000 - this.autoSpeed) / 100);
-        if (this.gold >= cost && this.autoSpeed > 100) {
-            this.gold -= cost;
-            this.autoSpeed -= 100;
-            this.update();
-        }
-    },
-
-    buyXp() {
-        let cost = 500 * Math.pow(2, this.xpMulti);
-        if (this.gold >= cost) {
-            this.gold -= cost;
-            this.xpMulti++;
-            this.update();
-        }
-    },
-
-    toggleAuto() {
-        clearInterval(this.autoTimer);
-        if (document.getElementById('auto-check').checked) {
-            this.autoTimer = setInterval(() => this.mine(), this.autoSpeed);
-        }
-    },
-
-    renderWorlds() {
-        let html = '';
-        this.worlds.forEach((w, i) => {
-            let isLocked = this.lv < w.req;
-            html += `
-                <div class="card ${isLocked ? 'locked' : ''}">
-                    <div><b>${w.n}</b><br><small>Requer LV ${w.req}</small></div>
-                    <button class="btn" style="width:auto;" onclick="game.travel(${i})" ${isLocked ? 'disabled' : ''}>
-                        ${isLocked ? '🔒' : 'VIAJAR'}
-                    </button>
-                </div>
-            `;
-        });
-        document.getElementById('world-list').innerHTML = html;
-    },
-
-    travel(i) {
-        this.curWorld = i;
-        this.tab('t-mina', document.querySelectorAll('.nav-item')[0]);
         this.update();
     },
 
@@ -263,17 +267,8 @@ const game = {
         document.getElementById('h-bag').innerText = this.bag;
         document.getElementById('h-lv').innerText = this.lv;
         document.getElementById('w-name').innerText = this.worlds[this.curWorld].n.toUpperCase();
-        
-        let nextXp = 100 * Math.pow(1.4, this.lv);
-        document.getElementById('xp-fill').style.width = (this.xp / nextXp * 100) + '%';
-        
-        document.getElementById('info-speed').innerText = `Atual: ${(this.autoSpeed/1000).toFixed(1)}s`;
-        document.getElementById('info-xp').innerText = `Atual: ${this.xpMulti}x`;
-        
-        let sCost = 1000 * Math.pow(2.5, (1000 - this.autoSpeed) / 100);
-        let xCost = 500 * Math.pow(2, this.xpMulti);
-        document.getElementById('btn-up-speed').innerText = '$' + this.f(sCost);
-        document.getElementById('btn-up-xp').innerText = '$' + this.f(xCost);
+        let next = 100 * Math.pow(1.4, this.lv);
+        document.getElementById('xp-fill').style.width = (this.xp/next*100)+'%';
     },
 
     tab(id, el) {
@@ -281,9 +276,26 @@ const game = {
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         el.classList.add('active');
+    },
+
+    renderWorlds() {
+        let h = '';
+        this.worlds.forEach((w, i) => {
+            let lock = this.lv < w.req;
+            h += `<div class="card" style="${lock?'opacity:0.4':''}">
+                <div><b>${w.n}</b><br><small>LV ${w.req}</small></div>
+                <button class="btn" style="width:70px" onclick="game.curWorld=${i};game.update();" ${lock?'disabled':''}>IR</button>
+            </div>`;
+        });
+        document.getElementById('world-list').innerHTML = h;
+    },
+
+    sendChat() {
+        let i = document.getElementById('chat-in');
+        channel.publish('msg', { user: this.user, txt: i.value });
+        i.value = '';
     }
 };
-
 game.init();
 </script>
 </body>
