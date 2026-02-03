@@ -3,230 +3,379 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MINER V1.1</title>
+    <title>MINER V2.0 - ULTIMATE</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #020205; --card: #0a0a15; --acc: #00ff88; --gold: #ffd700; }
+        :root { --bg: #05050a; --card: #0f0f1f; --acc: #00ff88; --gold: #ffd700; --blue: #00d9ff; --purp: #bc13fe; }
         * { box-sizing: border-box; font-family: 'Rajdhani', sans-serif; color: #fff; margin: 0; padding: 0; outline: none; }
         body { background: var(--bg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; align-items: center; justify-content: center; }
         .auth-card { background: var(--card); padding: 30px; border: 2px solid var(--acc); border-radius: 10px; width: 90%; max-width: 350px; text-align: center; }
 
         header { background: #000; padding: 10px; border-bottom: 2px solid var(--acc); display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .stat-box { background: #080808; padding: 5px; border-radius: 4px; border: 1px solid #222; font-size: 12px; }
         .stat-box b { color: var(--acc); }
 
-        .prog-container { grid-column: span 2; position: relative; height: 22px; background: #111; border-radius: 11px; overflow: hidden; border: 1px solid #333; margin-top: 5px; }
-        .prog-fill { height: 100%; background: linear-gradient(90deg, #00ff88, #00aaff); width: 0%; transition: 0.2s; }
-        .prog-text { position: absolute; width: 100%; text-align: center; top: 3px; font-weight: bold; font-size: 11px; text-shadow: 1px 1px #000; }
+        .prog-container { grid-column: span 2; position: relative; height: 16px; background: #111; border-radius: 8px; overflow: hidden; border: 1px solid #333; margin-top: 5px; }
+        .prog-fill { height: 100%; background: linear-gradient(90deg, var(--acc), var(--blue)); width: 0%; transition: 0.2s; }
+        .prog-text { position: absolute; width: 100%; text-align: center; top: 0px; font-weight: bold; font-size: 11px; text-shadow: 1px 1px #000; }
 
         .main { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; }
         .tab { display: none; }
         .tab.active { display: block; }
 
-        .egg-item { background: #0d0d1a; border: 1px solid #333; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .pet-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 5px; margin-top: 15px; }
-        .pet-unit { font-size: 18px; text-align: center; background: #111; border-radius: 4px; padding: 5px; border: 1px solid #222; position: relative; }
-        .pet-mult { font-size: 9px; color: var(--gold); display: block; }
+        .grid-inv { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 8px; background: #080810; padding: 10px; border-radius: 8px; }
+        .item-card { background: #1a1a2e; padding: 8px; border-radius: 6px; text-align: center; border-bottom: 3px solid #333; cursor: pointer; border-top: 1px solid #444; }
+        .item-card span { font-size: 10px; display: block; font-weight: bold; }
+        .t-1 { border-color: var(--acc); } .t-2 { border-color: var(--blue); } .t-3 { border-color: var(--purp); }
 
-        .btn { background: var(--acc); color: #000; font-weight: 700; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
-        .btn:disabled { opacity: 0.3; }
+        #chat-content { height: 160px; background: #000; border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 13px; margin-bottom: 5px; border-radius: 5px; }
+        .chat-line b { color: var(--blue); cursor: pointer; text-decoration: underline; }
 
-        nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; display: flex; border-top: 2px solid #111; }
+        .btn { background: var(--acc); color: #000; font-weight: 700; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; }
+        nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; display: flex; border-top: 2px solid #111; }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.4; }
-        .nav-item.active { opacity: 1; color: var(--acc); }
 
-        #chat-content { height: 180px; background: #050505; border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 13px; margin-bottom: 5px; border-radius: 5px; }
-        .rank-table { width: 100%; border-collapse: collapse; background: #080808; }
-        .rank-table td { padding: 8px; border-bottom: 1px solid #111; font-size: 14px; }
+        #trade-ui { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 4000; display: none; padding: 20px; flex-direction: column; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 8px; border-bottom: 1px solid #222; text-align: left; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
     <div class="auth-card">
-        <h2 style="font-family: Orbitron; margin-bottom: 15px; color: var(--acc);">MINER GOD</h2>
-        <input id="user" placeholder="USUÁRIO" style="background:#000; border:1px solid #333; padding:12px; width:100%; margin-bottom:10px; border-radius:5px;">
-        <input id="pass" type="password" placeholder="SENHA" style="background:#000; border:1px solid #333; padding:12px; width:100%; margin-bottom:10px; border-radius:5px;">
-        <button class="btn" style="width: 100%" onclick="game.start()">ENTRAR</button>
+        <h2 style="font-family: Orbitron; color: var(--acc);">MINER V2.0</h2>
+        <input id="user" placeholder="NICKNAME" style="background:#000; border:1px solid #333; padding:12px; width:100%; margin:15px 0 10px; border-radius:5px;">
+        <input id="pass" type="password" placeholder="SENHA" style="background:#000; border:1px solid #333; padding:12px; width:100%; margin-bottom:15px; border-radius:5px;">
+        <button class="btn" onclick="game.start()">LOGAR / CRIAR</button>
     </div>
 </div>
 
 <header>
-    <div class="stat-box">💰 GOLD: <b id="h-gold">0</b></div>
-    <div class="stat-box">🌍 MUNDO: <b id="h-w">1</b></div>
+    <div class="stat-box">💰 OURO: <b id="h-gold">0</b></div>
+    <div class="stat-box">🌍 MUNDO: <b id="h-w">1</b>/50</div>
     <div class="stat-box">🎒 BAG: <b id="h-bag">0</b></div>
-    <div class="stat-box">✨ RB: <b id="h-rb">0</b>/<span id="h-rb-need">1</span></div>
+    <div class="stat-box">✨ REBIRTHS: <b id="h-rb">0</b></div>
     <div class="prog-container">
         <div id="prog-fill" class="prog-fill"></div>
-        <div class="prog-text">XP MUNDO: <span id="h-lv">0</span> / 50</div>
+        <div class="prog-text">LEVEL PROGRESS: <span id="h-lv">0</span>%</div>
     </div>
+    <div id="h-pots" style="grid-column: span 2; display: flex; flex-wrap: wrap; gap: 4px;"></div>
 </header>
 
 <div class="main">
     <div id="t-mine" class="tab active">
-        <center>
-            <div id="mine-btn" style="font-size: 100px; margin: 15px 0; cursor: pointer;" onclick="game.mine()">⛏️</div>
-            <button class="btn" style="width:100%; background: var(--gold); margin-bottom: 10px;" onclick="game.sell()">VENDER MANUAL</button>
-            <div style="background: #111; padding: 15px; border-radius: 10px; text-align: left; font-size: 14px;">
-                <label style="display:flex; justify-content:space-between; margin-bottom:8px;">AUTO-CLICK <input type="checkbox" id="auto-click"></label>
-                <label style="display:flex; justify-content:space-between; margin-bottom:8px;">AUTO-REBIRTH <input type="checkbox" id="auto-rb"></label>
-                <label style="display:flex; justify-content:space-between;">AUTO-SELL <input type="checkbox" id="auto-sell"></label>
-            </div>
-        </center>
+        <div id="mine-btn" style="font-size: 90px; text-align: center; padding: 20px; cursor: pointer;" onclick="game.mine()">⛏️</div>
+        <button class="btn" style="background:var(--gold); margin-bottom: 10px;" onclick="game.sell()">VENDER TUDO</button>
+        <div style="background:#111; padding:10px; border-radius:8px; font-size: 13px; display: flex; justify-content: space-around;">
+            <label>AUTO-MINE <input type="checkbox" id="auto-click" checked></label>
+            <label>AUTO-SELL <input type="checkbox" id="auto-sell" checked></label>
+        </div>
     </div>
 
-    <div id="t-eggs" class="tab">
-        <h3>OVOS DA LOJA</h3>
-        <div id="egg-list"></div>
-        <h3 style="margin-top:20px">PETS COLECIONADOS</h3>
-        <div id="pet-shelf" class="pet-shelf"></div>
+    <div id="t-inv" class="tab">
+        <h4 style="color:var(--acc)">MEUS ITENS (AGRUPADOS)</h4>
+        <div id="full-inv" class="grid-inv"></div>
+        
+        <h4 style="color:var(--gold); margin-top:20px;">LOJA DE OVOS (MUNDOS LIBERADOS)</h4>
+        <div id="store-list" style="max-height: 200px; overflow-y: auto;"></div>
+        
+        <h4 style="color:var(--blue); margin-top:20px;">POÇÕES ESPECIAIS</h4>
+        <div id="potion-store" class="grid-inv"></div>
     </div>
 
     <div id="t-social" class="tab">
-        <h3>🏆 RANKING GLOBAL</h3>
-        <table class="rank-table" id="rank-list"></table>
-        <h3 style="margin-top:20px">💬 CHAT</h3>
         <div id="chat-content"></div>
-        <div style="display:flex; gap:5px;">
-            <input id="chat-msg" style="flex:1; background:#000; border:1px solid #333; padding:10px; border-radius:5px;" placeholder="Mensagem...">
-            <button class="btn" onclick="game.sendChat()">ENVIAR</button>
+        <div style="display:flex; gap:5px; margin-bottom: 15px;">
+            <input id="chat-msg" style="flex:1; background:#000; border:1px solid #333; padding:10px; border-radius:5px;" placeholder="Chat...">
+            <button class="btn" style="width:auto;" onclick="game.sendChat()">ENVIAR</button>
         </div>
+        <h4 style="color:var(--acc)">RANKING GLOBAL</h4>
+        <div style="background:#080808; border:1px solid #222; border-radius:5px;">
+            <table>
+                <thead><tr><th>PLAYER</th><th>MUNDO</th><th>RB</th><th>OURO</th></tr></thead>
+                <tbody id="rank-list"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="trade-ui">
+    <h3 style="text-align:center; color:var(--acc)">PROPOSTA DE TROCA</h3>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin:20px 0;">
+        <div id="trade-mine" style="background:#111; padding:10px; border-radius:10px; text-align:center;">
+            <small>VOCÊ</small><div id="slot-me"></div>
+        </div>
+        <div id="trade-them" style="background:#111; padding:10px; border-radius:10px; text-align:center;">
+            <small id="trade-with-name">...</small><div id="slot-them"></div>
+        </div>
+    </div>
+    <div id="trade-pick" class="grid-inv" style="max-height:150px; overflow-y:auto; border:1px solid #333;"></div>
+    <div style="display:flex; gap:10px; margin-top:15px;">
+        <button class="btn" style="background:#444" onclick="game.closeTrade()">RECUSAR</button>
+        <button class="btn" onclick="game.confirmTrade()">ACEITAR TROCA</button>
     </div>
 </div>
 
 <nav>
     <div class="nav-item active" onclick="game.tab('t-mine', this)">⛏️<span>MINA</span></div>
-    <div class="nav-item" onclick="game.tab('t-eggs', this)">🥚<span>PETS</span></div>
+    <div class="nav-item" onclick="game.tab('t-inv', this)">🎒<span>BAG</span></div>
     <div class="nav-item" onclick="game.tab('t-social', this)">💬<span>SOCIAL</span></div>
 </nav>
 
 <script>
 const game = {
-    data: { u:'', p:'', gold:0, bag:0, w:1, lv:0, rb:0, pets:{}, last: Date.now() },
-    suffixes: ["", "K", "M", "B", "T", "QD", "QT", "SX", "SP", "OC", "NO", "DC"],
-    petIcons: ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🐤","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🪲","🦋","🦎","🦀","🦞","🦐","🦑","🐙","🐠","🐟","🐡","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🦣","🐘","🐪","🐫","🦒","🦘","🦥","🦦","🦫","🦡","🦨","🐁","🐀","🐿️","🦔","🦎","🐍","🐢","🦖","🦕","🐙","🦑","🦐","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🦣","🐘","🐪","🐫","🦒","🦘","🦥","🦦","🦫","🦡","🦨","🐦","🐤","🐣","🐥","🦅","🦉","🐦","🐤","🐣","🐥","🦅","🦉","🐜","🐝","🪲","🦋","🐛","🦗","🕷️","🕸️","🦂","🦟","🪱","🦠","🐾","🍓","🍌","🍎","🥭","🍉","🌽","🍕","🍔","🍟","🌭","🍿","🥓","🍳","🧇","🥞","🧈","🥐","🥨","🥯","🥖","🧀","🥗","🥪","🌮","🌯","🍱","🥟","🍢","🍣","🍤","🍥","🥠","🥡","🍦","🍧","🍨","🍩","🍪","🎂","🍰","🧁","🥧","🍫","🍬","🍭","🍮","🍯","🍷","🍸","🍹","🍺","🧉","🥤","🧃","🥛","☕","🍵","🍶","🧊"],
+    data: { u:'', p:'', gold:0, bag:0, w:1, lv:0, rb:0, trb:0, inv:[], activePots:{} },
+    suffixes: ["", "K", "M", "B", "T", "QD", "QI"],
+    petIcons: ["🐶","🐱","🐹","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐙","🦄","🐲","🦖"],
+    players: {},
+    currentTrade: null,
 
     start() {
-        const u = document.getElementById('user').value.trim();
+        const u = document.getElementById('user').value.trim().toUpperCase();
         const p = document.getElementById('pass').value.trim();
         if(!u || !p) return;
         this.data.u = u; this.data.p = p;
-        let save = localStorage.getItem('MG_FINAL_'+u);
+        let save = localStorage.getItem('MINER_V2_PRO_'+u);
         if(save) {
             let d = JSON.parse(save);
-            if(d.p === p) {
-                // GANHO OFFLINE
-                const offTime = (Date.now() - d.last) / 1000;
-                if(offTime > 30) {
-                    let rate = (d.rb + 1) * d.w * 2;
-                    let gain = offTime * rate;
-                    d.gold += gain;
-                    alert("Bem vindo de volta! Você ganhou $" + this.f(gain) + " enquanto estava fora.");
-                }
-                this.data = d;
-            } else return alert("Senha incorreta!");
+            if(d.p === p) this.data = {...this.data, ...d};
+            else return alert("Senha errada!");
         }
         document.getElementById('auth-screen').style.display = 'none';
         this.initNet();
         this.update();
         setInterval(() => this.loop(), 100);
-        setInterval(() => this.sync(), 5000);
+        setInterval(() => this.sync(), 2000);
     },
 
     initNet() {
-        this.ably = new Ably.Realtime('wpgTTw.ROsKoQ:3G5iFq9cMkZppCZ4aicBOwDhAGs69lV0Egd55FistlQ');
-        this.ch = this.ably.channels.get('mg_vFinal');
-        this.ch.subscribe('msg', m => {
-            let c = document.getElementById('chat-content');
-            c.innerHTML += `<div><b style="color:var(--acc)">${m.data.u}:</b> ${m.data.t}</div>`;
-            c.scrollTop = c.scrollHeight;
-        });
-        this.ch.subscribe('rank', m => {
-            if(!window.rk) window.rk = {};
-            window.rk[m.data.u] = m.data.g;
-            this.drawRank();
+        // SUA CHAVE DE API AQUI
+        this.ably = new Ably.Realtime({ key: 'UhNj3w.aNaMJw:_GCHvcVsSZqK40m3oBBWiYisU6Sc2j6QU7mcD2QNI48', clientId: this.data.u });
+        this.ch = this.ably.channels.get('global_v2');
+        this.ch.subscribe('action', m => {
+            const d = m.data;
+            if(d.type === 'chat') {
+                const c = document.getElementById('chat-content');
+                c.innerHTML += `<div class="chat-line"><b onclick="game.reqTrade('${d.u}')">${d.u}</b>: ${d.t}</div>`;
+                c.scrollTop = c.scrollHeight;
+            }
+            if(d.type === 'sync') { this.players[d.u] = d; this.drawRank(); }
+            if(d.type === 'treq' && d.target === this.data.u) this.onTradeReq(d);
+            if(d.type === 'tupd' && d.id === this.currentTrade?.id && d.u !== this.data.u) this.onRemoteOffer(d);
+            if(d.type === 'tok' && d.id === this.currentTrade?.id) this.finalizeTrade(d);
         });
     },
 
     f(n) {
         if (n < 1000) return Math.floor(n);
         let i = Math.floor(Math.log10(n) / 3);
-        return (n / Math.pow(1000, i)).toFixed(2) + (this.suffixes[i] || "");
+        return (n / Math.pow(1000, i)).toFixed(1) + (this.suffixes[i] || "");
     },
 
     mine() {
-        let m = 1 + (this.data.rb * 5);
-        Object.values(this.data.pets).forEach(p => m += (p.q * p.m));
-        this.data.bag += m;
-        this.data.lv += (0.2 / this.data.w);
-        if(this.data.lv >= 50) this.data.lv = 50;
-        this.update();
+        let multi = this.data.activePots['XP'] ? this.data.activePots['XP'].p : 1;
+        let pwr = 1 + (this.data.trb * 5);
+        this.data.inv.forEach(i => { if(i.type === 'pet') pwr += i.power; });
+        this.data.bag += pwr;
+        this.data.lv += (6 / this.data.w) * multi;
+        if(this.data.lv >= 100) {
+            this.data.rb++; this.data.trb++;
+            if(this.data.rb >= (this.data.w * 3)) { if(this.data.w < 50) this.data.w++; this.data.rb = 0; }
+            this.data.lv = 0;
+            this.update();
+        }
     },
 
     sell() {
-        if(this.data.bag <= 0) return;
-        this.data.gold += this.data.bag * (this.data.w * 10);
+        let multi = this.data.activePots['GOLD'] ? this.data.activePots['GOLD'].p : 1;
+        this.data.gold += (this.data.bag * (this.data.w * 25)) * multi;
         this.data.bag = 0;
+        this.updateHeader();
+    },
+
+    buyPet(worldIdx, petTier) {
+        let cost = (worldIdx * 1000) * Math.pow(5, petTier);
+        if(this.data.gold < cost) return;
+        this.data.gold -= cost;
+        let names = ["Comum", "Raro", "Épico"];
+        this.data.inv.push({ 
+            type: 'pet', 
+            name: `${names[petTier]} Mundo ${worldIdx}`, 
+            icon: this.petIcons[worldIdx % this.petIcons.length],
+            power: (worldIdx * 100) * (petTier + 1),
+            tier: petTier + 1
+        });
+        this.update();
+    },
+
+    buyPot(eff, tier) {
+        let cost = 1000 * Math.pow(10, tier);
+        if(this.data.gold < cost) return;
+        this.data.gold -= cost;
+        this.data.inv.push({ 
+            type: 'pot', name: `Poção de ${eff} T-${tier+1}`, 
+            effect: eff, p: (tier+1)*2, dur: 60*(tier+1), tier: tier+1 
+        });
         this.update();
     },
 
     loop() {
         if(document.getElementById('auto-click').checked) this.mine();
         if(document.getElementById('auto-sell').checked && this.data.bag > 0) this.sell();
-        if(document.getElementById('auto-rb').checked && this.data.lv >= 50) {
-            this.data.rb++;
-            if(this.data.rb >= this.data.w) { this.data.w++; this.data.rb = 0; }
-            this.data.lv = 0;
-            this.update();
+        for(let k in this.data.activePots) {
+            if(Date.now() > this.data.activePots[k].end) delete this.data.activePots[k];
         }
-        this.data.last = Date.now();
-        localStorage.setItem('MG_FINAL_'+this.data.u, JSON.stringify(this.data));
+        this.updateHeader();
     },
 
-    buyEgg(wIdx) {
-        let cost = 100 * Math.pow(20, wIdx);
-        if(this.data.gold < cost) return;
-        this.data.gold -= cost;
-        let icon = this.petIcons[(wIdx * 5) + Math.floor(Math.random() * 5)] || "💎";
-        if(!this.data.pets[icon]) this.data.pets[icon] = { q:1, m: (wIdx + 1) * 15 };
-        else this.data.pets[icon].q++;
-        this.update();
-    },
-
-    update() {
+    updateHeader() {
         document.getElementById('h-gold').innerText = this.f(this.data.gold);
         document.getElementById('h-bag').innerText = this.f(this.data.bag);
         document.getElementById('h-w').innerText = this.data.w;
+        document.getElementById('h-rb').innerText = this.data.trb;
         document.getElementById('h-lv').innerText = Math.floor(this.data.lv);
-        document.getElementById('h-rb').innerText = this.data.rb;
-        document.getElementById('h-rb-need').innerText = this.data.w;
-        document.getElementById('prog-fill').style.width = (this.data.lv / 50 * 100) + "%";
+        document.getElementById('prog-fill').style.width = this.data.lv + "%";
         
-        let eggs = "";
-        for(let i=0; i<this.data.w; i++) {
-            let cost = 100 * Math.pow(20, i);
-            eggs += `<div class="egg-item"><span>MUNDO ${i+1}</span><button class="btn" onclick="game.buyEgg(${i})" ${this.data.gold < cost ? 'disabled':''}>$${this.f(cost)}</button></div>`;
+        let phtml = "";
+        for(let k in this.data.activePots) {
+            let sec = Math.ceil((this.data.activePots[k].end - Date.now())/1000);
+            phtml += `<div style="font-size:10px; background:rgba(188,19,254,0.2); padding:2px 5px; border-radius:3px;">${k} x${this.data.activePots[k].p} (${sec}s)</div>`;
         }
-        document.getElementById('egg-list').innerHTML = eggs;
-
-        document.getElementById('pet-shelf').innerHTML = Object.entries(this.data.pets).map(([i,p]) => `
-            <div class="pet-unit">${i} <small>x${p.q}</small><span class="pet-mult">+${this.f(p.q*p.m)}</span></div>
-        `).join('');
+        document.getElementById('h-pots').innerHTML = phtml;
     },
 
-    sync() { if(this.data.u) this.ch.publish('rank', { u: this.data.u, g: this.data.gold }); },
+    update() {
+        const grouped = {};
+        this.data.inv.forEach(it => {
+            let key = it.name + it.tier;
+            if(!grouped[key]) grouped[key] = {...it, qty: 1};
+            else grouped[key].qty++;
+        });
 
-    sendChat() {
-        let i = document.getElementById('chat-msg');
-        if(i.value) { this.ch.publish('msg', { u: this.data.u, t: i.value }); i.value = ""; }
+        let invH = "";
+        Object.values(grouped).forEach(it => {
+            invH += `<div class="item-card t-${it.tier}" onclick="game.useItem('${it.name}')">
+                <div style="font-size:24px">${it.type==='pet'?it.icon:'🧪'}</div>
+                <span>${it.name}</span><small>x${it.qty}</small>
+            </div>`;
+        });
+        document.getElementById('full-inv').innerHTML = invH || "Vazio";
+
+        let shopH = "";
+        for(let w=1; w <= this.data.w; w++) {
+            shopH += `<div style="margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">
+                <div style="font-size:11px; color:var(--acc)">OVOS MUNDO ${w}</div>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn" style="font-size:9px" onclick="game.buyPet(${w}, 0)">COMUM ($${this.f(w*1000)})</button>
+                    <button class="btn" style="font-size:9px; background:var(--blue)" onclick="game.buyPet(${w}, 1)">RARO ($${this.f(w*5000)})</button>
+                    <button class="btn" style="font-size:9px; background:var(--purp)" onclick="game.buyPet(${w}, 2)">ÉPICO ($${this.f(w*25000)})</button>
+                </div>
+            </div>`;
+        }
+        document.getElementById('store-list').innerHTML = shopH;
+
+        let potH = "";
+        ['XP', 'GOLD'].forEach(type => {
+            for(let t=0; t<3; t++) {
+                potH += `<div class="item-card t-${t+1}" onclick="game.buyPot('${type}', ${t})">
+                    🧪 <span>${type} T-${t+1}</span><br><small>$${this.f(1000*Math.pow(10,t))}</small>
+                </div>`;
+            }
+        });
+        document.getElementById('potion-store').innerHTML = potH;
+        localStorage.setItem('MINER_V2_PRO_'+this.data.u, JSON.stringify(this.data));
+    },
+
+    useItem(name) {
+        let idx = this.data.inv.findIndex(i => i.name === name);
+        let it = this.data.inv[idx];
+        if(it.type === 'pot') {
+            this.data.activePots[it.effect] = { p: it.p, end: Date.now() + (it.dur * 1000) };
+            this.data.inv.splice(idx, 1);
+        }
+        this.update();
+    },
+
+    // --- TRADE & RANKING ---
+    reqTrade(target) {
+        if(target === this.data.u) return;
+        let id = Math.random().toString(36).substr(2, 5);
+        this.currentTrade = { id, with: target, myOff: null, theirOff: null };
+        this.ch.publish('action', { type: 'treq', sender: this.data.u, target: target, id: id });
+        this.openTrade();
+    },
+
+    onTradeReq(d) {
+        if(this.currentTrade) return;
+        this.currentTrade = { id: d.id, with: d.sender, myOff: null, theirOff: null };
+        this.openTrade();
+    },
+
+    openTrade() {
+        document.getElementById('trade-ui').style.display = 'flex';
+        document.getElementById('trade-with-name').innerText = this.currentTrade.with;
+        let h = "";
+        this.data.inv.forEach((it, i) => {
+            h += `<div class="item-card t-${it.tier}" onclick="game.offer(${i})">${it.type==='pet'?it.icon:'🧪'}<br><span>${it.name}</span></div>`;
+        });
+        document.getElementById('trade-pick').innerHTML = h;
+    },
+
+    offer(i) {
+        let it = this.data.inv[i];
+        this.currentTrade.myOff = it;
+        document.getElementById('slot-me').innerHTML = `<div class="item-card t-${it.tier}">${it.type==='pet'?it.icon:'🧪'}<br>${it.name}</div>`;
+        this.ch.publish('action', { type: 'tupd', id: this.currentTrade.id, u: this.data.u, off: it });
+    },
+
+    onRemoteOffer(d) {
+        this.currentTrade.theirOff = d.off;
+        document.getElementById('slot-them').innerHTML = `<div class="item-card t-${d.off.tier}">${d.off.type==='pet'?d.off.icon:'🧪'}<br>${d.off.name}</div>`;
+    },
+
+    confirmTrade() {
+        if(!this.currentTrade.myOff || !this.currentTrade.theirOff) return alert("Ambos precisam oferecer algo!");
+        this.ch.publish('action', { type: 'tok', id: this.currentTrade.id, from: this.data.u, to: this.currentTrade.with, item: this.currentTrade.myOff });
+    },
+
+    finalizeTrade(d) {
+        if(d.to === this.data.u) this.data.inv.push(d.item);
+        if(d.from === this.data.u) {
+            let idx = this.data.inv.findIndex(i => i.name === d.item.name && i.tier === d.item.tier);
+            this.data.inv.splice(idx, 1);
+        }
+        this.closeTrade();
+        this.update();
+    },
+
+    closeTrade() { 
+        document.getElementById('trade-ui').style.display = 'none'; 
+        this.currentTrade = null;
+        document.getElementById('slot-me').innerHTML = "";
+        document.getElementById('slot-them').innerHTML = "";
     },
 
     drawRank() {
-        let sorted = Object.entries(window.rk).sort((a,b) => b[1]-a[1]).slice(0,10);
-        document.getElementById('rank-list').innerHTML = sorted.map((p,i) => `<tr><td>#${i+1} ${p[0]}</td><td align="right">$${this.f(p[1])}</td></tr>`).join('');
+        let sorted = Object.values(this.players).sort((a,b) => b.g - a.g).slice(0, 15);
+        document.getElementById('rank-list').innerHTML = sorted.map(p => `
+            <tr><td>${p.u}</td><td>M${p.w}</td><td>${p.rb}</td><td style="color:var(--gold)">$${this.f(p.g)}</td></tr>
+        `).join('');
+    },
+
+    sync() {
+        if(this.ch) this.ch.publish('action', { type: 'sync', u: this.data.u, g: this.data.gold, w: this.data.w, rb: this.data.trb });
+    },
+
+    sendChat() {
+        let m = document.getElementById('chat-msg');
+        if(m.value.trim() && this.ch) {
+            this.ch.publish('action', { type: 'chat', u: this.data.u, t: m.value.trim() });
+            m.value = "";
+        }
     },
 
     tab(id, btn) {
