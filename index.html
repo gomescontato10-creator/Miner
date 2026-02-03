@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MINER V2.0 - ULTIMATE</title>
+    <title>MINER V2.5 - POTIONS UPDATE</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
@@ -29,34 +29,62 @@
         .grid-inv { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 8px; background: #080810; padding: 10px; border-radius: 8px; }
         .item-card { background: #1a1a2e; padding: 8px; border-radius: 6px; text-align: center; border-bottom: 3px solid #333; cursor: pointer; border-top: 1px solid #444; }
         .item-card span { font-size: 10px; display: block; font-weight: bold; }
-        .t-1 { border-color: var(--acc); } .t-2 { border-color: var(--blue); } .t-3 { border-color: var(--purp); }
+        .t-1 { border-color: #aaa; } .t-2 { border-color: #00ff88; } .t-3 { border-color: #00d9ff; }
+        .t-4 { border-color: #bc13fe; } .t-5 { border-color: #ffd700; } .t-6 { border-color: #ff4500; }
+        .t-7 { border-color: #ff00ff; } .t-8 { border-color: #00ffff; } .t-9 { border-color: #ffffff; } .t-10 { border-color: #ff0000; }
 
         #chat-content { height: 160px; background: #000; border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 13px; margin-bottom: 5px; border-radius: 5px; }
         .chat-line b { color: var(--blue); cursor: pointer; text-decoration: underline; }
 
-        .btn { background: var(--acc); color: #000; font-weight: 700; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; }
+        .btn { background: var(--acc); color: #000; font-weight: 700; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; transition: 0.2s; }
         nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; display: flex; border-top: 2px solid #111; }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.4; }
+        .nav-item.active { opacity: 1; color: var(--acc); }
 
+        #admin-panel { position: fixed; inset: 0; background: #000; z-index: 5000; padding: 20px; display: none; overflow-y: auto; }
+        .admin-box { background: #111; border: 1px solid #444; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        input[type="number"], select { background: #222; border: 1px solid #444; padding: 5px; color: #fff; width: 100%; margin: 5px 0; }
+        
         #trade-ui { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 4000; display: none; padding: 20px; flex-direction: column; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { padding: 8px; border-bottom: 1px solid #222; text-align: left; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
     <div class="auth-card">
-        <h2 style="font-family: Orbitron; color: var(--acc);">MINER V2.0</h2>
+        <h2 style="font-family: Orbitron; color: var(--acc);">MINER V2.5</h2>
         <input id="user" placeholder="NICKNAME" style="background:#000; border:1px solid #333; padding:12px; width:100%; margin:15px 0 10px; border-radius:5px;">
         <input id="pass" type="password" placeholder="SENHA" style="background:#000; border:1px solid #333; padding:12px; width:100%; margin-bottom:15px; border-radius:5px;">
         <button class="btn" onclick="game.start()">LOGAR / CRIAR</button>
     </div>
 </div>
 
+<div id="admin-panel">
+    <h2 style="color:red; text-align:center">ADMIN PANEL</h2>
+    <div class="admin-box">
+        <h4>DAR DINHEIRO</h4>
+        <select id="adm-target"></select>
+        <input type="number" id="adm-gold-val" placeholder="Quantidade">
+        <button class="btn" onclick="game.admGiveGold()">EXECUTAR</button>
+    </div>
+    <div class="admin-box">
+        <h4>CRIAR EVENTO GLOBAL</h4>
+        <input id="adm-ev-name" placeholder="Nome do Evento">
+        <input type="number" id="adm-ev-multi" placeholder="Multiplicador (ex: 2)">
+        <select id="adm-ev-type">
+            <option value="GOLD">GOLD</option>
+            <option value="XP">XP</option>
+            <option value="BOTH">GOLD & XP</option>
+        </select>
+        <input type="number" id="adm-ev-dur" placeholder="Duração (Segundos)">
+        <button class="btn" style="background:var(--purp)" onclick="game.admCreateEvent()">LANÇAR EVENTO</button>
+    </div>
+    <button class="btn" style="background:#444" onclick="document.getElementById('admin-panel').style.display='none'">FECHAR</button>
+</div>
+
 <header>
     <div class="stat-box">💰 OURO: <b id="h-gold">0</b></div>
-    <div class="stat-box">🌍 MUNDO: <b id="h-w">1</b>/50</div>
+    <div class="stat-box">🌍 MUNDO: <b id="h-w">1</b>/50 <span id="h-rb-prog" style="color:var(--blue); font-size:10px"></span></div>
     <div class="stat-box">🎒 BAG: <b id="h-bag">0</b></div>
     <div class="stat-box">✨ REBIRTHS: <b id="h-rb">0</b></div>
     <div class="prog-container">
@@ -68,7 +96,7 @@
 
 <div class="main">
     <div id="t-mine" class="tab active">
-        <div id="mine-btn" style="font-size: 90px; text-align: center; padding: 20px; cursor: pointer;" onclick="game.mine()">⛏️</div>
+        <div id="mine-btn" style="font-size: 90px; text-align: center; padding: 20px; cursor: pointer; user-select: none;" onclick="game.mine()">⛏️</div>
         <button class="btn" style="background:var(--gold); margin-bottom: 10px;" onclick="game.sell()">VENDER TUDO</button>
         <div style="background:#111; padding:10px; border-radius:8px; font-size: 13px; display: flex; justify-content: space-around;">
             <label>AUTO-MINE <input type="checkbox" id="auto-click" checked></label>
@@ -77,13 +105,13 @@
     </div>
 
     <div id="t-inv" class="tab">
-        <h4 style="color:var(--acc)">MEUS ITENS (AGRUPADOS)</h4>
+        <h4 style="color:var(--acc)">MEUS ITENS</h4>
         <div id="full-inv" class="grid-inv"></div>
         
-        <h4 style="color:var(--gold); margin-top:20px;">LOJA DE OVOS (MUNDOS LIBERADOS)</h4>
-        <div id="store-list" style="max-height: 200px; overflow-y: auto;"></div>
+        <h4 style="color:var(--gold); margin-top:20px;">LOJA DE OVOS (QTY: <select id="buy-qty" style="width:50px; display:inline;"><option>1</option><option>3</option><option>7</option><option>10</option></select>)</h4>
+        <div id="store-list" style="max-height: 250px; overflow-y: auto;"></div>
         
-        <h4 style="color:var(--blue); margin-top:20px;">POÇÕES ESPECIAIS</h4>
+        <h4 style="color:var(--blue); margin-top:20px;">POÇÕES</h4>
         <div id="potion-store" class="grid-inv"></div>
     </div>
 
@@ -103,23 +131,6 @@
     </div>
 </div>
 
-<div id="trade-ui">
-    <h3 style="text-align:center; color:var(--acc)">PROPOSTA DE TROCA</h3>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin:20px 0;">
-        <div id="trade-mine" style="background:#111; padding:10px; border-radius:10px; text-align:center;">
-            <small>VOCÊ</small><div id="slot-me"></div>
-        </div>
-        <div id="trade-them" style="background:#111; padding:10px; border-radius:10px; text-align:center;">
-            <small id="trade-with-name">...</small><div id="slot-them"></div>
-        </div>
-    </div>
-    <div id="trade-pick" class="grid-inv" style="max-height:150px; overflow-y:auto; border:1px solid #333;"></div>
-    <div style="display:flex; gap:10px; margin-top:15px;">
-        <button class="btn" style="background:#444" onclick="game.closeTrade()">RECUSAR</button>
-        <button class="btn" onclick="game.confirmTrade()">ACEITAR TROCA</button>
-    </div>
-</div>
-
 <nav>
     <div class="nav-item active" onclick="game.tab('t-mine', this)">⛏️<span>MINA</span></div>
     <div class="nav-item" onclick="game.tab('t-inv', this)">🎒<span>BAG</span></div>
@@ -129,10 +140,10 @@
 <script>
 const game = {
     data: { u:'', p:'', gold:0, bag:0, w:1, lv:0, rb:0, trb:0, inv:[], activePots:{} },
-    suffixes: ["", "K", "M", "B", "T", "QD", "QI"],
+    suffixes: ["", "K", "M", "B", "T", "QD", "QI", "SX", "SP", "OC", "NO", "DC"],
     petIcons: ["🐶","🐱","🐹","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐙","🦄","🐲","🦖"],
-    players: {},
-    currentTrade: null,
+    players: {}, 
+    events: {},
 
     start() {
         const u = document.getElementById('user').value.trim().toUpperCase();
@@ -153,35 +164,37 @@ const game = {
     },
 
     initNet() {
-        // SUA CHAVE DE API AQUI
         this.ably = new Ably.Realtime({ key: 'UhNj3w.aNaMJw:_GCHvcVsSZqK40m3oBBWiYisU6Sc2j6QU7mcD2QNI48', clientId: this.data.u });
         this.ch = this.ably.channels.get('global_v2');
         this.ch.subscribe('action', m => {
             const d = m.data;
             if(d.type === 'chat') {
                 const c = document.getElementById('chat-content');
-                c.innerHTML += `<div class="chat-line"><b onclick="game.reqTrade('${d.u}')">${d.u}</b>: ${d.t}</div>`;
+                c.innerHTML += `<div class="chat-line"><b>${d.u}</b>: ${d.t}</div>`;
                 c.scrollTop = c.scrollHeight;
             }
             if(d.type === 'sync') { this.players[d.u] = d; this.drawRank(); }
-            if(d.type === 'treq' && d.target === this.data.u) this.onTradeReq(d);
-            if(d.type === 'tupd' && d.id === this.currentTrade?.id && d.u !== this.data.u) this.onRemoteOffer(d);
-            if(d.type === 'tok' && d.id === this.currentTrade?.id) this.finalizeTrade(d);
+            if(d.type === 'adm_gold' && d.target === this.data.u) { this.data.gold += d.val; this.update(); }
+            if(d.type === 'adm_event') { this.events[d.ev.name] = d.ev; }
         });
     },
 
     f(n) {
         if (n < 1000) return Math.floor(n);
         let i = Math.floor(Math.log10(n) / 3);
-        return (n / Math.pow(1000, i)).toFixed(1) + (this.suffixes[i] || "");
+        return (n / Math.pow(1000, i)).toFixed(2) + (this.suffixes[i] || "");
     },
 
     mine() {
         let multi = this.data.activePots['XP'] ? this.data.activePots['XP'].p : 1;
+        // Evento global XP
+        for(let e in this.events) if((this.events[e].type==='XP'||this.events[e].type==='BOTH') && Date.now() < this.events[e].end) multi *= this.events[e].m;
+
         let pwr = 1 + (this.data.trb * 5);
         this.data.inv.forEach(i => { if(i.type === 'pet') pwr += i.power; });
         this.data.bag += pwr;
         this.data.lv += (6 / this.data.w) * multi;
+        
         if(this.data.lv >= 100) {
             this.data.rb++; this.data.trb++;
             if(this.data.rb >= (this.data.w * 3)) { if(this.data.w < 50) this.data.w++; this.data.rb = 0; }
@@ -192,33 +205,43 @@ const game = {
 
     sell() {
         let multi = this.data.activePots['GOLD'] ? this.data.activePots['GOLD'].p : 1;
+        // Evento global GOLD
+        for(let e in this.events) if((this.events[e].type==='GOLD'||this.events[e].type==='BOTH') && Date.now() < this.events[e].end) multi *= this.events[e].m;
+        
         this.data.gold += (this.data.bag * (this.data.w * 25)) * multi;
         this.data.bag = 0;
         this.updateHeader();
     },
 
     buyPet(worldIdx, petTier) {
-        let cost = (worldIdx * 1000) * Math.pow(5, petTier);
-        if(this.data.gold < cost) return;
-        this.data.gold -= cost;
+        let qty = parseInt(document.getElementById('buy-qty').value);
+        let base = Math.pow(worldIdx, 2.5) * 1000;
+        let unitCost = base * Math.pow(8, petTier);
+        let totalCost = unitCost * qty;
+
+        if(this.data.gold < totalCost) return alert("Ouro insuficiente!");
+        this.data.gold -= totalCost;
+        
         let names = ["Comum", "Raro", "Épico"];
-        this.data.inv.push({ 
-            type: 'pet', 
-            name: `${names[petTier]} Mundo ${worldIdx}`, 
-            icon: this.petIcons[worldIdx % this.petIcons.length],
-            power: (worldIdx * 100) * (petTier + 1),
-            tier: petTier + 1
-        });
+        for(let q=0; q<qty; q++) {
+            this.data.inv.push({ 
+                type: 'pet', 
+                name: `${names[petTier]} M-${worldIdx}`, 
+                icon: this.petIcons[worldIdx % this.petIcons.length],
+                power: (worldIdx * 150) * Math.pow(4, petTier),
+                tier: (petTier + 1) * 2 
+            });
+        }
         this.update();
     },
 
     buyPot(eff, tier) {
-        let cost = 1000 * Math.pow(10, tier);
-        if(this.data.gold < cost) return;
+        let cost = 2500 * Math.pow(15, tier);
+        if(this.data.gold < cost) return alert("Ouro insuficiente!");
         this.data.gold -= cost;
         this.data.inv.push({ 
-            type: 'pot', name: `Poção de ${eff} T-${tier+1}`, 
-            effect: eff, p: (tier+1)*2, dur: 60*(tier+1), tier: tier+1 
+            type: 'pot', name: `Poção ${eff} T-${tier+1}`, 
+            effect: eff, p: (tier+1) * 3, dur: 60 * (tier + 1) * (1 + tier/2), tier: tier+1 
         });
         this.update();
     },
@@ -226,9 +249,8 @@ const game = {
     loop() {
         if(document.getElementById('auto-click').checked) this.mine();
         if(document.getElementById('auto-sell').checked && this.data.bag > 0) this.sell();
-        for(let k in this.data.activePots) {
-            if(Date.now() > this.data.activePots[k].end) delete this.data.activePots[k];
-        }
+        for(let k in this.data.activePots) if(Date.now() > this.data.activePots[k].end) delete this.data.activePots[k];
+        for(let e in this.events) if(Date.now() > this.events[e].end) delete this.events[e];
         this.updateHeader();
     },
 
@@ -239,40 +261,42 @@ const game = {
         document.getElementById('h-rb').innerText = this.data.trb;
         document.getElementById('h-lv').innerText = Math.floor(this.data.lv);
         document.getElementById('prog-fill').style.width = this.data.lv + "%";
+        // Progresso do Mundo
+        document.getElementById('h-rb-prog').innerText = `(${this.data.rb}/${this.data.w * 3})`;
         
         let phtml = "";
-        for(let k in this.data.activePots) {
-            let sec = Math.ceil((this.data.activePots[k].end - Date.now())/1000);
-            phtml += `<div style="font-size:10px; background:rgba(188,19,254,0.2); padding:2px 5px; border-radius:3px;">${k} x${this.data.activePots[k].p} (${sec}s)</div>`;
-        }
+        for(let k in this.data.activePots) phtml += `<div style="font-size:9px; background:rgba(0,217,255,0.2); padding:2px 4px;">${k} x${this.data.activePots[k].p}</div>`;
+        for(let e in this.events) phtml += `<div style="font-size:9px; background:rgba(255,215,0,0.3); border:1px solid gold; padding:2px 4px;">EV: ${e}</div>`;
         document.getElementById('h-pots').innerHTML = phtml;
     },
 
     update() {
         const grouped = {};
         this.data.inv.forEach(it => {
-            let key = it.name + it.tier;
+            let key = it.name + (it.tier || 0);
             if(!grouped[key]) grouped[key] = {...it, qty: 1};
             else grouped[key].qty++;
         });
 
         let invH = "";
         Object.values(grouped).forEach(it => {
-            invH += `<div class="item-card t-${it.tier}" onclick="game.useItem('${it.name}')">
+            let extra = it.type === 'pet' ? `<br><small>PWR: ${this.f(it.power)}</small>` : "";
+            invH += `<div class="item-card t-${it.tier}" onclick="game.useItem('${it.name}', ${it.tier})">
                 <div style="font-size:24px">${it.type==='pet'?it.icon:'🧪'}</div>
-                <span>${it.name}</span><small>x${it.qty}</small>
+                <span>${it.name}</span>${extra}<small>x${it.qty}</small>
             </div>`;
         });
         document.getElementById('full-inv').innerHTML = invH || "Vazio";
 
         let shopH = "";
         for(let w=1; w <= this.data.w; w++) {
+            let base = Math.pow(w, 2.5) * 1000;
             shopH += `<div style="margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">
                 <div style="font-size:11px; color:var(--acc)">OVOS MUNDO ${w}</div>
                 <div style="display:flex; gap:5px;">
-                    <button class="btn" style="font-size:9px" onclick="game.buyPet(${w}, 0)">COMUM ($${this.f(w*1000)})</button>
-                    <button class="btn" style="font-size:9px; background:var(--blue)" onclick="game.buyPet(${w}, 1)">RARO ($${this.f(w*5000)})</button>
-                    <button class="btn" style="font-size:9px; background:var(--purp)" onclick="game.buyPet(${w}, 2)">ÉPICO ($${this.f(w*25000)})</button>
+                    <button class="btn" style="font-size:9px" onclick="game.buyPet(${w}, 0)">COMUM ($${this.f(base)})</button>
+                    <button class="btn" style="font-size:9px; background:var(--blue)" onclick="game.buyPet(${w}, 1)">RARO ($${this.f(base*8)})</button>
+                    <button class="btn" style="font-size:9px; background:var(--purp)" onclick="game.buyPet(${w}, 2)">ÉPICO ($${this.f(base*64)})</button>
                 </div>
             </div>`;
         }
@@ -280,18 +304,17 @@ const game = {
 
         let potH = "";
         ['XP', 'GOLD'].forEach(type => {
-            for(let t=0; t<3; t++) {
-                potH += `<div class="item-card t-${t+1}" onclick="game.buyPot('${type}', ${t})">
-                    🧪 <span>${type} T-${t+1}</span><br><small>$${this.f(1000*Math.pow(10,t))}</small>
-                </div>`;
+            for(let t=0; t<10; t++) {
+                potH += `<div class="item-card t-${t+1}" onclick="game.buyPot('${type}', ${t})">🧪 <span>${type} T-${t+1}</span><br><small>$${this.f(2500*Math.pow(15,t))}</small></div>`;
             }
         });
         document.getElementById('potion-store').innerHTML = potH;
         localStorage.setItem('MINER_V2_PRO_'+this.data.u, JSON.stringify(this.data));
     },
 
-    useItem(name) {
-        let idx = this.data.inv.findIndex(i => i.name === name);
+    useItem(name, tier) {
+        let idx = this.data.inv.findIndex(i => i.name === name && i.tier === tier);
+        if(idx === -1) return;
         let it = this.data.inv[idx];
         if(it.type === 'pot') {
             this.data.activePots[it.effect] = { p: it.p, end: Date.now() + (it.dur * 1000) };
@@ -300,82 +323,49 @@ const game = {
         this.update();
     },
 
-    // --- TRADE & RANKING ---
-    reqTrade(target) {
-        if(target === this.data.u) return;
-        let id = Math.random().toString(36).substr(2, 5);
-        this.currentTrade = { id, with: target, myOff: null, theirOff: null };
-        this.ch.publish('action', { type: 'treq', sender: this.data.u, target: target, id: id });
-        this.openTrade();
-    },
+    sendChat() {
+        let m = document.getElementById('chat-msg');
+        let txt = m.value.trim();
+        if(!txt) return;
 
-    onTradeReq(d) {
-        if(this.currentTrade) return;
-        this.currentTrade = { id: d.id, with: d.sender, myOff: null, theirOff: null };
-        this.openTrade();
-    },
-
-    openTrade() {
-        document.getElementById('trade-ui').style.display = 'flex';
-        document.getElementById('trade-with-name').innerText = this.currentTrade.with;
-        let h = "";
-        this.data.inv.forEach((it, i) => {
-            h += `<div class="item-card t-${it.tier}" onclick="game.offer(${i})">${it.type==='pet'?it.icon:'🧪'}<br><span>${it.name}</span></div>`;
-        });
-        document.getElementById('trade-pick').innerHTML = h;
-    },
-
-    offer(i) {
-        let it = this.data.inv[i];
-        this.currentTrade.myOff = it;
-        document.getElementById('slot-me').innerHTML = `<div class="item-card t-${it.tier}">${it.type==='pet'?it.icon:'🧪'}<br>${it.name}</div>`;
-        this.ch.publish('action', { type: 'tupd', id: this.currentTrade.id, u: this.data.u, off: it });
-    },
-
-    onRemoteOffer(d) {
-        this.currentTrade.theirOff = d.off;
-        document.getElementById('slot-them').innerHTML = `<div class="item-card t-${d.off.tier}">${d.off.type==='pet'?d.off.icon:'🧪'}<br>${d.off.name}</div>`;
-    },
-
-    confirmTrade() {
-        if(!this.currentTrade.myOff || !this.currentTrade.theirOff) return alert("Ambos precisam oferecer algo!");
-        this.ch.publish('action', { type: 'tok', id: this.currentTrade.id, from: this.data.u, to: this.currentTrade.with, item: this.currentTrade.myOff });
-    },
-
-    finalizeTrade(d) {
-        if(d.to === this.data.u) this.data.inv.push(d.item);
-        if(d.from === this.data.u) {
-            let idx = this.data.inv.findIndex(i => i.name === d.item.name && i.tier === d.item.tier);
-            this.data.inv.splice(idx, 1);
+        if(txt === '/admin') {
+            let code = prompt("CÓDIGO SECRETO:");
+            if(code === "2708") {
+                document.getElementById('admin-panel').style.display = 'block';
+                let sel = document.getElementById('adm-target');
+                sel.innerHTML = `<option value="${this.data.u}">EU MESMO</option>` + 
+                    Object.keys(this.players).map(p => `<option value="${p}">${p}</option>`).join('');
+            }
+            m.value = ""; return;
         }
-        this.closeTrade();
-        this.update();
+
+        this.ch.publish('action', { type: 'chat', u: this.data.u, t: txt });
+        m.value = "";
     },
 
-    closeTrade() { 
-        document.getElementById('trade-ui').style.display = 'none'; 
-        this.currentTrade = null;
-        document.getElementById('slot-me').innerHTML = "";
-        document.getElementById('slot-them').innerHTML = "";
+    admGiveGold() {
+        let t = document.getElementById('adm-target').value;
+        let v = parseFloat(document.getElementById('adm-gold-val').value);
+        this.ch.publish('action', { type: 'adm_gold', target: t, val: v });
+    },
+
+    admCreateEvent() {
+        let ev = {
+            name: document.getElementById('adm-ev-name').value,
+            m: parseFloat(document.getElementById('adm-ev-multi').value),
+            type: document.getElementById('adm-ev-type').value,
+            end: Date.now() + (parseInt(document.getElementById('adm-ev-dur').value) * 1000)
+        };
+        this.ch.publish('action', { type: 'adm_event', ev: ev });
     },
 
     drawRank() {
         let sorted = Object.values(this.players).sort((a,b) => b.g - a.g).slice(0, 15);
-        document.getElementById('rank-list').innerHTML = sorted.map(p => `
-            <tr><td>${p.u}</td><td>M${p.w}</td><td>${p.rb}</td><td style="color:var(--gold)">$${this.f(p.g)}</td></tr>
-        `).join('');
+        document.getElementById('rank-list').innerHTML = sorted.map(p => `<tr><td>${p.u}</td><td>M${p.w}</td><td>${p.rb}</td><td style="color:var(--gold)">$${this.f(p.g)}</td></tr>`).join('');
     },
 
     sync() {
         if(this.ch) this.ch.publish('action', { type: 'sync', u: this.data.u, g: this.data.gold, w: this.data.w, rb: this.data.trb });
-    },
-
-    sendChat() {
-        let m = document.getElementById('chat-msg');
-        if(m.value.trim() && this.ch) {
-            this.ch.publish('action', { type: 'chat', u: this.data.u, t: m.value.trim() });
-            m.value = "";
-        }
     },
 
     tab(id, btn) {
