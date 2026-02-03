@@ -3,288 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MINER V1.1 </title>
+    <title>MINER V1.1</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #05050a; --card: #101020; --acc: #00ff88; --gold: #ffcc00; --xp: #00ccff; --pot: #ff44ff; }
-        * { box-sizing: border-box; font-family: 'Rajdhani', sans-serif; color: #fff; margin: 0; padding: 0; }
+        :root { --bg: #020205; --card: #0a0a15; --acc: #00ff88; --gold: #ffd700; }
+        * { box-sizing: border-box; font-family: 'Rajdhani', sans-serif; color: #fff; margin: 0; padding: 0; outline: none; }
         body { background: var(--bg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .auth-card { background: var(--card); padding: 30px; border-radius: 15px; border-bottom: 4px solid var(--acc); width: 100%; max-width: 320px; text-align: center; }
+        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: var(--card); padding: 30px; border: 2px solid var(--acc); border-radius: 10px; width: 90%; max-width: 350px; text-align: center; }
 
-        header { background: #000; padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-bottom: 2px solid var(--acc); }
-        .stat-box { background: #111; padding: 6px; border-radius: 8px; border: 1px solid #333; text-align: center; font-size: 13px; }
+        header { background: #000; padding: 10px; border-bottom: 2px solid var(--acc); display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .stat-box { background: #080808; padding: 5px; border-radius: 4px; border: 1px solid #222; font-size: 12px; }
         .stat-box b { color: var(--acc); }
 
-        .xp-bar { grid-column: span 2; background: #000; height: 22px; border-radius: 10px; border: 1px solid #333; overflow: hidden; position: relative; margin-top: 5px; }
-        .xp-fill { height: 100%; background: linear-gradient(90deg, #0055ff, var(--xp)); width: 0%; transition: 0.3s; }
+        .prog-container { grid-column: span 2; position: relative; height: 22px; background: #111; border-radius: 11px; overflow: hidden; border: 1px solid #333; margin-top: 5px; }
+        .prog-fill { height: 100%; background: linear-gradient(90deg, #00ff88, #00aaff); width: 0%; transition: 0.2s; }
+        .prog-text { position: absolute; width: 100%; text-align: center; top: 3px; font-weight: bold; font-size: 11px; text-shadow: 1px 1px #000; }
 
         .main { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; }
         .tab { display: none; }
         .tab.active { display: block; }
 
-        .card { background: var(--card); border: 1px solid #222; padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .item-box { background: #111; border: 1px solid #333; padding: 10px; border-radius: 8px; text-align: center; font-size: 11px; }
-        .owned { border-color: var(--acc); background: #002211; }
+        .egg-item { background: #0d0d1a; border: 1px solid #333; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .pet-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 5px; margin-top: 15px; }
+        .pet-unit { font-size: 18px; text-align: center; background: #111; border-radius: 4px; padding: 5px; border: 1px solid #222; position: relative; }
+        .pet-mult { font-size: 9px; color: var(--gold); display: block; }
 
-        .btn { background: var(--acc); color: #000; font-weight: bold; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
-        .btn:active { transform: scale(0.95); }
-        input { background: #000; border: 1px solid #333; padding: 12px; width: 100%; margin: 5px 0; color: #fff; border-radius: 8px; }
-        
-        nav { display: flex; background: #000; height: 65px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #222; }
-        .nav-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #555; cursor: pointer; }
-        .nav-item.active { color: var(--acc); }
+        .btn { background: var(--acc); color: #000; font-weight: 700; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
+        .btn:disabled { opacity: 0.3; }
 
-        #chat-box { height: 150px; background: #000; border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 12px; border-radius: 8px; margin-bottom: 10px; }
-        .rank-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #222; font-size: 14px; }
+        nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; display: flex; border-top: 2px solid #111; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.4; }
+        .nav-item.active { opacity: 1; color: var(--acc); }
+
+        #chat-content { height: 180px; background: #050505; border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 13px; margin-bottom: 5px; border-radius: 5px; }
+        .rank-table { width: 100%; border-collapse: collapse; background: #080808; }
+        .rank-table td { padding: 8px; border-bottom: 1px solid #111; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
     <div class="auth-card">
-        <h1 style="color: var(--acc); font-family: 'Orbitron'; font-size: 24px; margin-bottom: 15px;">MINER GOD</h1>
-        <input id="u" placeholder="Usuário">
-        <input id="p" type="password" placeholder="Senha">
-        <button class="btn" style="width: 100%; margin-top: 10px;" onclick="game.auth()">ENTRAR / REGISTRAR</button>
-        <p id="auth-msg" style="font-size: 11px; margin-top: 10px; color: #888;"></p>
+        <h2 style="font-family: Orbitron; margin-bottom: 15px; color: var(--acc);">MINER GOD</h2>
+        <input id="user" placeholder="USUÁRIO" style="background:#000; border:1px solid #333; padding:12px; width:100%; margin-bottom:10px; border-radius:5px;">
+        <input id="pass" type="password" placeholder="SENHA" style="background:#000; border:1px solid #333; padding:12px; width:100%; margin-bottom:10px; border-radius:5px;">
+        <button class="btn" style="width: 100%" onclick="game.start()">ENTRAR</button>
     </div>
 </div>
 
 <header>
-    <div class="stat-box">💰 <b id="h-gold">0</b></div>
-    <div class="stat-box">🎒 <b id="h-bag">0</b></div>
-    <div class="xp-bar">
-        <div id="xp-fill" class="xp-fill"></div>
-        <div style="position: absolute; width:100%; text-align:center; font-size:11px; top:2px; font-weight: bold; text-shadow: 1px 1px #000;">
-            MUNDO <span id="h-w">1</span>: <span id="w-name">TERRA</span> (<span id="h-prog">0</span>/50)
-        </div>
+    <div class="stat-box">💰 GOLD: <b id="h-gold">0</b></div>
+    <div class="stat-box">🌍 MUNDO: <b id="h-w">1</b></div>
+    <div class="stat-box">🎒 BAG: <b id="h-bag">0</b></div>
+    <div class="stat-box">✨ RB: <b id="h-rb">0</b>/<span id="h-rb-need">1</span></div>
+    <div class="prog-container">
+        <div id="prog-fill" class="prog-fill"></div>
+        <div class="prog-text">XP MUNDO: <span id="h-lv">0</span> / 50</div>
     </div>
 </header>
 
 <div class="main">
-    <div id="t-mina" class="tab active">
+    <div id="t-mine" class="tab active">
         <center>
-            <div id="mine-btn" style="font-size: 100px; margin: 20px; cursor: pointer; user-select: none;" onclick="game.mine()">⛏️</div>
-            <button class="btn" style="background:var(--gold); width: 100%; font-size: 18px; padding: 15px;" onclick="game.sell()">VENDER TUDO</button>
-            <div style="margin-top: 20px; background: #111; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                <input type="checkbox" id="auto-check" onchange="game.toggleAuto()" style="width: 25px; height: 25px;"> 
-                <label for="auto-check">AUTO-MINER ATIVO</label>
+            <div id="mine-btn" style="font-size: 100px; margin: 15px 0; cursor: pointer;" onclick="game.mine()">⛏️</div>
+            <button class="btn" style="width:100%; background: var(--gold); margin-bottom: 10px;" onclick="game.sell()">VENDER MANUAL</button>
+            <div style="background: #111; padding: 15px; border-radius: 10px; text-align: left; font-size: 14px;">
+                <label style="display:flex; justify-content:space-between; margin-bottom:8px;">AUTO-CLICK <input type="checkbox" id="auto-click"></label>
+                <label style="display:flex; justify-content:space-between; margin-bottom:8px;">AUTO-REBIRTH <input type="checkbox" id="auto-rb"></label>
+                <label style="display:flex; justify-content:space-between;">AUTO-SELL <input type="checkbox" id="auto-sell"></label>
             </div>
         </center>
     </div>
 
-    <div id="t-shop" class="tab">
-        <h3>🥚 OVOS & 🧪 POÇÕES</h3>
-        <div style="margin: 10px 0; display: flex; gap: 10px;">
-            <button class="btn" style="flex:1" onclick="game.buyEgg()">ABRIR OVO ($<span id="egg-cost">1k</span>)</button>
-            <button class="btn" style="flex:1; background: var(--pot)" onclick="game.buyPot()">POÇÃO XP ($5k)</button>
-        </div>
-        <div id="pet-list" class="grid"></div>
-    </div>
-
-    <div id="t-up" class="tab">
-        <h3>⚡ MELHORIAS</h3>
-        <div id="up-list"></div>
+    <div id="t-eggs" class="tab">
+        <h3>OVOS DA LOJA</h3>
+        <div id="egg-list"></div>
+        <h3 style="margin-top:20px">PETS COLECIONADOS</h3>
+        <div id="pet-shelf" class="pet-shelf"></div>
     </div>
 
     <div id="t-social" class="tab">
-        <h3>🏆 TOP MUNDIAL</h3>
-        <div id="rank-list" style="margin-bottom: 20px; background: #111; padding: 10px; border-radius: 8px; border: 1px solid var(--acc);"></div>
-        <h3>💬 CHAT GLOBAL</h3>
-        <div id="chat-box"></div>
+        <h3>🏆 RANKING GLOBAL</h3>
+        <table class="rank-table" id="rank-list"></table>
+        <h3 style="margin-top:20px">💬 CHAT</h3>
+        <div id="chat-content"></div>
         <div style="display:flex; gap:5px;">
-            <input id="chat-in" placeholder="Escreve aqui...">
-            <button class="btn" onclick="game.chat()">ENVIAR</button>
+            <input id="chat-msg" style="flex:1; background:#000; border:1px solid #333; padding:10px; border-radius:5px;" placeholder="Mensagem...">
+            <button class="btn" onclick="game.sendChat()">ENVIAR</button>
         </div>
     </div>
 </div>
 
 <nav>
-    <div class="nav-item active" onclick="game.tab('t-mina', this)">⛏️</div>
-    <div class="nav-item" onclick="game.tab('t-shop', this)">🥚</div>
-    <div class="nav-item" onclick="game.tab('t-up', this)">⚡</div>
-    <div class="nav-item" onclick="game.tab('t-social', this)">💬</div>
+    <div class="nav-item active" onclick="game.tab('t-mine', this)">⛏️<span>MINA</span></div>
+    <div class="nav-item" onclick="game.tab('t-eggs', this)">🥚<span>PETS</span></div>
+    <div class="nav-item" onclick="game.tab('t-social', this)">💬<span>SOCIAL</span></div>
 </nav>
 
 <script>
 const game = {
-    ably: null, ch: null,
-    worlds: ["Terra", "Marte", "Vênus", "Júpiter", "Saturno", "Urano", "Netuno", "Plutão", "Ceres", "Eris", "Lua", "Sol", "Alfa Centauri", "Andrómeda", "Buraco Negro", "Nebulosa", "Galáxia X", "Multiverso", "Dimensão 0", "Reino Divino"],
-    data: { u:'', p:'', gold:0, bag:0, w:1, prog:0, pets:{}, pots:0, multi:1, xpMulti:1, autoLv:0 },
-    suffixes: ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"],
-    petIcons: ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🐤","🦅"],
-    
-    audio: {
-        mine: new Audio('https://www.soundjay.com/buttons/sounds/button-29.mp3'),
-        up: new Audio('https://www.soundjay.com/buttons/sounds/button-09.mp3'),
-        sell: new Audio('https://www.soundjay.com/buttons/sounds/button-10.mp3')
+    data: { u:'', p:'', gold:0, bag:0, w:1, lv:0, rb:0, pets:{}, last: Date.now() },
+    suffixes: ["", "K", "M", "B", "T", "QD", "QT", "SX", "SP", "OC", "NO", "DC"],
+    petIcons: ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🐤","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🪲","🦋","🦎","🦀","🦞","🦐","🦑","🐙","🐠","🐟","🐡","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🦣","🐘","🐪","🐫","🦒","🦘","🦥","🦦","🦫","🦡","🦨","🐁","🐀","🐿️","🦔","🦎","🐍","🐢","🦖","🦕","🐙","🦑","🦐","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🦣","🐘","🐪","🐫","🦒","🦘","🦥","🦦","🦫","🦡","🦨","🐦","🐤","🐣","🐥","🦅","🦉","🐦","🐤","🐣","🐥","🦅","🦉","🐜","🐝","🪲","🦋","🐛","🦗","🕷️","🕸️","🦂","🦟","🪱","🦠","🐾","🍓","🍌","🍎","🥭","🍉","🌽","🍕","🍔","🍟","🌭","🍿","🥓","🍳","🧇","🥞","🧈","🥐","🥨","🥯","🥖","🧀","🥗","🥪","🌮","🌯","🍱","🥟","🍢","🍣","🍤","🍥","🥠","🥡","🍦","🍧","🍨","🍩","🍪","🎂","🍰","🧁","🥧","🍫","🍬","🍭","🍮","🍯","🍷","🍸","🍹","🍺","🧉","🥤","🧃","🥛","☕","🍵","🍶","🧊"],
+
+    start() {
+        const u = document.getElementById('user').value.trim();
+        const p = document.getElementById('pass').value.trim();
+        if(!u || !p) return;
+        this.data.u = u; this.data.p = p;
+        let save = localStorage.getItem('MG_FINAL_'+u);
+        if(save) {
+            let d = JSON.parse(save);
+            if(d.p === p) {
+                // GANHO OFFLINE
+                const offTime = (Date.now() - d.last) / 1000;
+                if(offTime > 30) {
+                    let rate = (d.rb + 1) * d.w * 2;
+                    let gain = offTime * rate;
+                    d.gold += gain;
+                    alert("Bem vindo de volta! Você ganhou $" + this.f(gain) + " enquanto estava fora.");
+                }
+                this.data = d;
+            } else return alert("Senha incorreta!");
+        }
+        document.getElementById('auth-screen').style.display = 'none';
+        this.initNet();
+        this.update();
+        setInterval(() => this.loop(), 100);
+        setInterval(() => this.sync(), 5000);
     },
 
-    init() {
+    initNet() {
         this.ably = new Ably.Realtime('wpgTTw.ROsKoQ:3G5iFq9cMkZppCZ4aicBOwDhAGs69lV0Egd55FistlQ');
-        this.ch = this.ably.channels.get('v7_miner');
-        this.ch.subscribe('c', m => this.onChat(m.data));
-        this.ch.subscribe('r', m => this.onRank(m.data));
-        this.renderUps();
+        this.ch = this.ably.channels.get('mg_vFinal');
+        this.ch.subscribe('msg', m => {
+            let c = document.getElementById('chat-content');
+            c.innerHTML += `<div><b style="color:var(--acc)">${m.data.u}:</b> ${m.data.t}</div>`;
+            c.scrollTop = c.scrollHeight;
+        });
+        this.ch.subscribe('rank', m => {
+            if(!window.rk) window.rk = {};
+            window.rk[m.data.u] = m.data.g;
+            this.drawRank();
+        });
     },
 
     f(n) {
-        if(n < 1000) return Math.floor(n);
-        let i = Math.floor(Math.log10(n)/3);
-        return (n/Math.pow(1000, i)).toFixed(2) + (this.suffixes[i] || "??");
-    },
-
-    play(s) { this.audio[s].currentTime = 0; this.audio[s].play().catch(()=>{}); },
-
-    auth() {
-        const u = document.getElementById('u').value.trim();
-        const p = document.getElementById('p').value.trim();
-        if(!u || !p) return;
-        let save = localStorage.getItem('MGV7_'+u);
-        if(save) {
-            let d = JSON.parse(save);
-            if(d.p !== p) return document.getElementById('auth-msg').innerText = "Senha incorreta!";
-            this.data = d;
-        } else { this.data.u = u; this.data.p = p; }
-        document.getElementById('auth-screen').style.display = 'none';
-        this.update();
-        setInterval(() => this.loop(), 1000);
+        if (n < 1000) return Math.floor(n);
+        let i = Math.floor(Math.log10(n) / 3);
+        return (n / Math.pow(1000, i)).toFixed(2) + (this.suffixes[i] || "");
     },
 
     mine() {
-        this.play('mine');
-        let pwr = (1 + this.data.autoLv) * this.data.xpMulti;
-        this.data.bag += (1 * this.data.multi);
-        this.data.prog += pwr;
-
-        if(this.data.prog >= 50) {
-            this.data.prog = 0;
-            this.data.w++;
-            this.play('up');
-            alert("MUNDO CONCLUÍDO! BEM-VINDO A: " + (this.worlds[this.data.w-1] || "Mundo Desconhecido"));
-        }
+        let m = 1 + (this.data.rb * 5);
+        Object.values(this.data.pets).forEach(p => m += (p.q * p.m));
+        this.data.bag += m;
+        this.data.lv += (0.2 / this.data.w);
+        if(this.data.lv >= 50) this.data.lv = 50;
         this.update();
     },
 
     sell() {
         if(this.data.bag <= 0) return;
-        this.play('sell');
-        let val = this.data.bag * (this.data.w * 100) * this.data.multi;
-        this.data.gold += val;
+        this.data.gold += this.data.bag * (this.data.w * 10);
         this.data.bag = 0;
         this.update();
     },
 
-    buyEgg() {
-        let cost = 1000 * Math.pow(3, this.data.w-1);
+    loop() {
+        if(document.getElementById('auto-click').checked) this.mine();
+        if(document.getElementById('auto-sell').checked && this.data.bag > 0) this.sell();
+        if(document.getElementById('auto-rb').checked && this.data.lv >= 50) {
+            this.data.rb++;
+            if(this.data.rb >= this.data.w) { this.data.w++; this.data.rb = 0; }
+            this.data.lv = 0;
+            this.update();
+        }
+        this.data.last = Date.now();
+        localStorage.setItem('MG_FINAL_'+this.data.u, JSON.stringify(this.data));
+    },
+
+    buyEgg(wIdx) {
+        let cost = 100 * Math.pow(20, wIdx);
         if(this.data.gold < cost) return;
         this.data.gold -= cost;
-        let icon = this.petIcons[Math.floor(Math.random() * this.petIcons.length)];
-        if(!this.data.pets[icon]) this.data.pets[icon] = { q: 1, m: (this.data.w * 0.5) };
+        let icon = this.petIcons[(wIdx * 5) + Math.floor(Math.random() * 5)] || "💎";
+        if(!this.data.pets[icon]) this.data.pets[icon] = { q:1, m: (wIdx + 1) * 15 };
         else this.data.pets[icon].q++;
-        this.calcMulti();
         this.update();
-    },
-
-    buyPot() {
-        if(this.data.gold < 5000) return;
-        this.data.gold -= 5000;
-        this.data.xpMulti += 0.5;
-        this.update();
-    },
-
-    calcMulti() {
-        let m = 1;
-        Object.values(this.data.pets).forEach(p => m += (p.q * p.m));
-        this.data.multi = m;
     },
 
     update() {
         document.getElementById('h-gold').innerText = this.f(this.data.gold);
         document.getElementById('h-bag').innerText = this.f(this.data.bag);
         document.getElementById('h-w').innerText = this.data.w;
-        document.getElementById('w-name').innerText = this.worlds[this.data.w-1] || "Infinito";
-        document.getElementById('h-prog').innerText = Math.floor(this.data.prog);
-        document.getElementById('xp-fill').style.width = (this.data.prog / 50 * 100) + "%";
-        document.getElementById('egg-cost').innerText = this.f(1000 * Math.pow(3, this.data.w-1));
+        document.getElementById('h-lv').innerText = Math.floor(this.data.lv);
+        document.getElementById('h-rb').innerText = this.data.rb;
+        document.getElementById('h-rb-need').innerText = this.data.w;
+        document.getElementById('prog-fill').style.width = (this.data.lv / 50 * 100) + "%";
         
-        let ph = "";
-        Object.entries(this.data.pets).forEach(([icon, d]) => {
-            ph += `<div class="item-box owned">${icon}<br>x${d.q}<br><small>+${(d.q*d.m).toFixed(1)}x</small></div>`;
-        });
-        document.getElementById('pet-list').innerHTML = ph;
-    },
-
-    toggleAuto() {
-        if(this.data.autoLv === 0) {
-            alert("Compra o Auto-Miner nas Melhorias!");
-            document.getElementById('auto-check').checked = false;
+        let eggs = "";
+        for(let i=0; i<this.data.w; i++) {
+            let cost = 100 * Math.pow(20, i);
+            eggs += `<div class="egg-item"><span>MUNDO ${i+1}</span><button class="btn" onclick="game.buyEgg(${i})" ${this.data.gold < cost ? 'disabled':''}>$${this.f(cost)}</button></div>`;
         }
-    },
+        document.getElementById('egg-list').innerHTML = eggs;
 
-    renderUps() {
-        const list = [
-            { n: "Auto-Miner", d: "Mineração automática", cost: 5000, key: 'autoLv' },
-            { n: "Super Picareta", d: "Mais XP por clique", cost: 2500, key: 'xpMulti' }
-        ];
-        document.getElementById('up-list').innerHTML = list.map(u => `
-            <div class="card">
-                <div><b>${u.n}</b><br><small>${u.d}</small></div>
-                <button class="btn" onclick="game.buyUp('${u.key}', ${u.cost})">UP: $${this.f(u.cost)}</button>
-            </div>
+        document.getElementById('pet-shelf').innerHTML = Object.entries(this.data.pets).map(([i,p]) => `
+            <div class="pet-unit">${i} <small>x${p.q}</small><span class="pet-mult">+${this.f(p.q*p.m)}</span></div>
         `).join('');
     },
 
-    buyUp(key, cost) {
-        if(this.data.gold >= cost) {
-            this.data.gold -= cost;
-            this.data[key]++;
-            this.update();
-        }
+    sync() { if(this.data.u) this.ch.publish('rank', { u: this.data.u, g: this.data.gold }); },
+
+    sendChat() {
+        let i = document.getElementById('chat-msg');
+        if(i.value) { this.ch.publish('msg', { u: this.data.u, t: i.value }); i.value = ""; }
     },
 
-    chat() {
-        let i = document.getElementById('chat-in');
-        if(!i.value) return;
-        this.ch.publish('c', { u: this.data.u, t: i.value });
-        i.value = "";
-    },
-
-    onChat(d) {
-        let b = document.getElementById('chat-box');
-        b.innerHTML += `<div><span style="color:var(--acc)">[${this.data.u === d.u ? 'TU' : 'GLO'}]</span> <b>${d.u}:</b> ${d.t}</div>`;
-        b.scrollTop = b.scrollHeight;
-    },
-
-    onRank(d) {
-        let h = "";
-        d.sort((a,b) => b.g - a.g).slice(0,5).forEach((p, i) => {
-            h += `<div class="rank-item"><span>#${i+1} ${p.u}</span> <b>$${this.f(p.g)}</b></div>`;
-        });
-        document.getElementById('rank-list').innerHTML = h;
-    },
-
-    loop() {
-        if(document.getElementById('auto-check').checked && this.data.autoLv > 0) this.mine();
-        if(this.data.u) {
-            localStorage.setItem('MGV7_'+this.data.u, JSON.stringify(this.data));
-            this.ch.publish('r', { u: this.data.u, g: this.data.gold });
-        }
+    drawRank() {
+        let sorted = Object.entries(window.rk).sort((a,b) => b[1]-a[1]).slice(0,10);
+        document.getElementById('rank-list').innerHTML = sorted.map((p,i) => `<tr><td>#${i+1} ${p[0]}</td><td align="right">$${this.f(p[1])}</td></tr>`).join('');
     },
 
     tab(id, btn) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelectorAll('.tab, .nav-item').forEach(x => x.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         btn.classList.add('active');
     }
 };
-
-game.init();
 </script>
 </body>
 </html>
