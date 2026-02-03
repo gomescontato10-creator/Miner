@@ -3,343 +3,303 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MINER 50W - MULTIPLAYER V1</title>
+    <title>MINER TYCOON UPD 1.0 : 50 WORLDS</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #050508; --pnl: #11111d; --acc: #00ff88; --gold: #ffcc00; --xp: #bb00ff; --evt: #ff4444; }
-        * { box-sizing: border-box; font-family: 'Rajdhani', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: #fff; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        :root { --bg: #05050a; --card: #101020; --acc: #00ff88; --gold: #ffcc00; --xp: #00ccff; --rb: #ff00ff; }
+        * { box-sizing: border-box; font-family: 'Rajdhani', sans-serif; color: #fff; }
+        body { background: var(--bg); margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 99999; display: flex; align-items: center; justify-content: center; }
-        .auth-box { width: 85%; max-width: 350px; background: var(--pnl); padding: 25px; border-radius: 15px; border: 1px solid var(--acc); }
-
-        header { background: #000; padding: 10px; border-bottom: 2px solid var(--acc); display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
-        .stat-card { background: #111; padding: 5px; border-radius: 5px; text-align: center; border: 1px solid #222; }
-        .stat-val { display: block; font-weight: bold; color: var(--acc); font-size: 14px; }
-        .xp-cont { grid-column: span 3; background: #222; height: 18px; border-radius: 9px; margin-top: 5px; overflow: hidden; position: relative; border: 1px solid #444; }
-        #xp-bar { background: var(--xp); height: 100%; width: 0%; transition: 0.3s; }
-        #xp-txt { position: absolute; width: 100%; text-align: center; font-size: 11px; font-weight: bold; line-height: 18px; text-shadow: 1px 1px #000; }
-
-        #event-banner { background: var(--evt); color: #fff; text-align: center; font-weight: bold; padding: 5px; font-size: 12px; display: none; }
-
-        .content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
-        .tab { display: none; } .tab.active { display: block; }
+        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         
-        .game-card { background: var(--pnl); border-radius: 10px; padding: 12px; margin-bottom: 10px; border-left: 4px solid var(--acc); }
+        header { background: #000; padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-bottom: 2px solid var(--acc); }
+        .stat-box { background: #111; padding: 6px; border-radius: 8px; border: 1px solid #333; text-align: center; font-size: 13px; }
+        .online-count { grid-column: span 2; color: var(--acc); font-size: 11px; text-transform: uppercase; }
+
+        .xp-bar-container { grid-column: span 2; background: #000; height: 15px; border-radius: 10px; border: 1px solid #333; overflow: hidden; position: relative; }
+        .xp-fill { height: 100%; background: var(--xp); width: 0%; transition: 0.3s; }
+
+        .main { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
+        .tab { display: none; width: 100%; flex-direction: column; }
+        .tab.active { display: flex; }
+
+        .card { background: var(--card); border: 1px solid #222; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .locked { opacity: 0.5; filter: grayscale(1); }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 5px; }
-        .btn-main { background: var(--acc); color: #000; }
-        .btn-sub { background: #222; color: #fff; border: 1px solid #444; }
 
-        nav { background: #000; height: 65px; display: flex; border-top: 1px solid #333; position: fixed; bottom: 0; width: 100%; z-index: 100; }
-        .nav-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #444; }
-        .nav-item.active { color: var(--acc); border-top: 2px solid var(--acc); }
+        .egg-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .egg-item { background: #111; border: 1px solid #333; border-radius: 10px; padding: 10px; text-align: center; transition: 0.2s; }
+        .egg-item.owned { border-color: var(--acc); box-shadow: 0 0 10px rgba(0,255,136,0.2); background: #0a2010; }
 
-        input, select { width: 100%; padding: 12px; margin: 8px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 5px; }
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:10000; padding:20px; overflow-y: auto; }
+        .btn { background: var(--acc); color: #000; font-weight: bold; cursor: pointer; border: none; padding: 10px; border-radius: 5px; }
+        .btn:disabled { background: #444; cursor: not-allowed; }
+        input { background: #111; border: 1px solid #333; padding: 12px; width: 100%; margin: 5px 0; color: #fff; border-radius: 8px; }
         
-        .rank-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .rank-table th { color: var(--acc); text-align: left; padding: 8px; border-bottom: 1px solid #333; }
-        .rank-table td { padding: 8px; border-bottom: 1px solid #222; }
+        nav { display: flex; background: #000; height: 65px; position: fixed; bottom: 0; width: 100%; border-top: 2px solid #222; }
+        .nav-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #444; cursor: pointer; }
+        .nav-item.active { color: var(--acc); }
+
+        #chat-box { height: 150px; background: #000; border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 13px; border-radius: 8px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
-    <div class="auth-box">
-        <h2 style="color:var(--acc); text-align:center;">MINER 50W</h2>
-        <input type="text" id="login-user" placeholder="USUÁRIO">
-        <input type="password" id="login-pass" placeholder="SENHA">
-        <button class="btn btn-main" onclick="core.auth('login')">ENTRAR</button>
-        <button class="btn btn-sub" onclick="core.auth('reg')">CRIAR CONTA</button>
-    </div>
+    <h1 style="color: var(--acc); font-family: 'Orbitron';">MINER 50W</h1>
+    <input id="auth-user" placeholder="Usuário">
+    <input id="auth-pass" type="password" placeholder="Senha">
+    <button class="btn" style="width: 200px" onclick="game.login()">ENTRAR NO JOGO</button>
 </div>
 
-<div id="event-banner">EVENTO ATIVO: <span id="evt-name">...</span> (<span id="evt-timer">0</span>s)</div>
-
 <header>
-    <div class="stat-card">LV <span class="stat-val" id="st-lv">1</span></div>
-    <div class="stat-card">MUNDO <span class="stat-val" id="st-world">1/50</span></div>
-    <div class="stat-card">RB <span class="stat-val" id="st-rb">0</span></div>
-    <div class="stat-card" style="grid-column: span 2;">$ <span class="stat-val" id="st-money" style="color:var(--gold)">0</span></div>
-    <div class="stat-card">BAG <span class="stat-val" id="st-bag">0</span></div>
-    <div class="xp-cont">
-        <div id="xp-bar"></div>
-        <div id="xp-txt">0 / 100</div>
+    <div class="stat-box online-count">🟢 ONLINE: <span id="online-total">1</span></div>
+    <div class="stat-box">💰 <b id="h-gold">0</b></div>
+    <div class="stat-box">🎒 <b id="h-bag">0</b></div>
+    <div class="xp-bar-container">
+        <div id="xp-fill" class="xp-fill"></div>
+        <div style="position: absolute; width:100%; text-align:center; font-size:10px; top:0; font-weight: bold; text-shadow: 1px 1px #000;">LV <span id="h-lv">1</span></div>
     </div>
 </header>
 
-<div class="content">
-    <div id="tab-mine" class="tab active">
-        <div style="text-align:center; padding:20px 0;">
-            <div id="click-area" onclick="core.mine()" style="font-size:100px; cursor:pointer; user-select: none;">⛏️</div>
-            <button class="btn btn-main" style="margin-top:20px; padding:20px;" onclick="core.sell()">VENDER MINÉRIOS</button>
+<div class="main">
+    <div id="t-mina" class="tab active">
+        <center>
+            <h3 id="w-name" style="color: var(--xp); text-transform: uppercase; letter-spacing: 2px;">MUNDO 1</h3>
+            <div id="mine-btn" style="font-size: 80px; margin: 20px; cursor: pointer; user-select: none; transition: 0.1s;" onclick="game.mine()">⛏️</div>
+            <button class="btn" style="background:var(--gold); width: 80%; font-size: 18px;" onclick="game.sell()">VENDER (+$<span id="sell-val">0</span>)</button>
+            <div style="margin-top:20px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <input type="checkbox" id="auto-click" onchange="game.toggleAuto()" style="width: 20px;"> 
+                <label for="auto-click">AUTO-MINER ATIVO</label>
+            </div>
+        </center>
+    </div>
+
+    <div id="t-worlds" class="tab">
+        <h3>🌍 VIAJAR (50 MUNDOS)</h3>
+        <div id="world-list"></div>
+    </div>
+
+    <div id="t-upgrades" class="tab">
+        <h3>⚡ MELHORIAS</h3>
+        <div class="card">
+            <div>
+                <b>Boost de XP</b><br>
+                <small>Ganha mais XP por clique</small>
+            </div>
+            <button class="btn" id="btn-up-xp" onclick="game.buyXpUp()">UP: $1.0k</button>
         </div>
-        <div class="game-card"><div id="pet-summary">🐾 0 PETS (+0 PWR)</div></div>
+        <div class="card">
+            <div>
+                <b>Velocidade Auto</b><br>
+                <small id="auto-info">Atual: 1.0s</small>
+            </div>
+            <button class="btn" id="btn-up-speed" onclick="game.buySpeedUp()">UP: $5.0k</button>
+        </div>
     </div>
 
-    <div id="tab-worlds" class="tab"><div id="world-list"></div></div>
-    <div id="tab-eggs" class="tab"><div id="egg-list"></div></div>
-    
-    <div id="tab-rank" class="tab">
-        <h3 style="color:var(--acc)">RANKING GLOBAL</h3>
-        <table class="rank-table">
-            <thead><tr><th>JOGADOR</th><th>LV</th><th>MUNDO</th><th>$</th></tr></thead>
-            <tbody id="rank-body"></tbody>
-        </table>
+    <div id="t-eggs" class="tab">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>🥚 OVOS (PETS)</h3>
+            <span id="h-multi" style="color:var(--acc); font-weight: bold;">Multi: 1.0x</span>
+        </div>
+        <div class="egg-grid" id="egg-grid"></div>
     </div>
 
-    <div id="tab-chat" class="tab">
-        <div id="chat-box" style="height:300px; background:#000; overflow-y:auto; padding:10px; border:1px solid #222; margin-bottom:10px;"></div>
-        <div style="display:flex; gap:5px;"><input type="text" id="chat-in" placeholder="Sua mensagem..."><button class="btn btn-main" style="width:70px;" onclick="core.sendMsg()">OK</button></div>
-    </div>
-</div>
-
-<div id="modal-admin" class="modal">
-    <div class="game-card">
-        <h2 style="color:var(--xp)">ADMIN PANEL</h2>
-        <input type="text" id="evt-title" placeholder="NOME DO EVENTO">
-        <input type="number" id="evt-time" placeholder="TEMPO (S)">
-        <input type="number" id="evt-mult" placeholder="MULTIPLICADOR">
-        <select id="evt-type">
-            <option value="both">DINHEIRO E XP</option>
-            <option value="gold">SÓ DINHEIRO</option>
-            <option value="xp">SÓ XP</option>
-        </select>
-        <button class="btn btn-main" style="background:var(--evt); color:#fff;" onclick="core.startEvent()">LANÇAR EVENTO</button>
-        <hr style="border:0; border-top:1px solid #444; margin: 15px 0;">
-        <select id="adm-target"><option value="ALL">TODOS</option></select>
-        <input type="text" id="adm-cash-val" placeholder="VALOR (EX: 1M)">
-        <button class="btn btn-main" onclick="core.admGive()">DAR DINHEIRO</button>
-        <button class="btn btn-sub" onclick="document.getElementById('modal-admin').style.display='none'">FECHAR</button>
+    <div id="t-social" class="tab">
+        <h3>💬 CHAT & RANKING</h3>
+        <div id="chat-box"></div>
+        <div style="display:flex; gap:5px">
+            <input id="chat-in" placeholder="Mensagem..." onkeydown="if(event.key==='Enter') game.sendChat()">
+            <button class="btn" onclick="game.sendChat()">OK</button>
+        </div>
     </div>
 </div>
 
 <nav>
-    <div class="nav-item active" onclick="core.tab('tab-mine', this)">⛏️</div>
-    <div class="nav-item" onclick="core.tab('tab-worlds', this)">🌍</div>
-    <div class="nav-item" onclick="core.tab('tab-eggs', this)">🥚</div>
-    <div class="nav-item" onclick="core.tab('tab-rank', this)">🏆</div>
-    <div class="nav-item" onclick="core.tab('tab-chat', this)">💬</div>
+    <div class="nav-item active" onclick="game.tab('t-mina', this)">⛏️</div>
+    <div class="nav-item" onclick="game.tab('t-worlds', this)">🌍</div>
+    <div class="nav-item" onclick="game.tab('t-upgrades', this)">⚡</div>
+    <div class="nav-item" onclick="game.tab('t-eggs', this)">🥚</div>
+    <div class="nav-item" onclick="game.tab('t-social', this)">💬</div>
 </nav>
 
 <script>
-const core = {
-    data: { user:'', gold:0, bag:0, xp:0, lv:1, world:1, rb:0, pets:[] },
-    players: [],
-    chan: null,
-    event: { active: false, time: 0, mult: 1, type: 'both', name: '' },
-    suffixes: ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"],
-
-    f(n) {
-        if (n < 1000) return Math.floor(n);
-        let exp = Math.floor(Math.log10(n) / 3);
-        if (exp >= this.suffixes.length) exp = this.suffixes.length - 1;
-        return (n / Math.pow(1000, exp)).toFixed(2) + this.suffixes[exp];
-    },
-
-    parse(v) {
-        let val = parseFloat(v);
-        let s = String(v).toUpperCase();
-        for(let i=1; i<this.suffixes.length; i++) if(s.includes(this.suffixes[i])) return val * Math.pow(1000, i);
-        return val || 0;
-    },
-
-    auth(mode) {
-        const u = document.getElementById('login-user').value.trim();
-        const p = document.getElementById('login-pass').value.trim();
-        if(!u) return;
-        let db = JSON.parse(localStorage.getItem('M50W_GLOBAL_DATA') || '{}');
-        if(mode === 'reg') {
-            if(db[u]) return alert("Usuário já existe!");
-            db[u] = { ...this.data, user:u, pass:p };
-            localStorage.setItem('M50W_GLOBAL_DATA', JSON.stringify(db));
-            alert("Criado com sucesso!");
-        }
-        if(db[u] && db[u].pass === p) {
-            this.data = db[u];
-            document.getElementById('auth-screen').style.display = 'none';
-            this.init();
-        } else if(mode === 'login') alert("Senha incorreta!");
-    },
+const game = {
+    user: '', gold: 0, bag: 0, lv: 1, xp: 0, multi: 1, xpMulti: 1, autoSpeed: 1000,
+    curWorld: 0, worlds: [], loop: null, ownedEggs: [],
+    suffixes: {'k':1e3,'M':1e6,'B':1e9,'T':1e12,'Qa':1e15,'Qi':1e18,'Sx':1e21,'Sp':1e24,'Oc':1e27},
 
     init() {
-        // Conexão única para todos os jogadores
-        const ably = new Ably.Realtime('UhNj3w.aNaMJw:_GCHvcVsSZqK40m3oBBWiYisU6Sc2j6QU7mcD2QNI48');
-        this.chan = ably.channels.get('global_server_v1');
-        
-        this.chan.subscribe(m => {
-            if(m.name === 'chat') this.addMsg(m.data.u, m.data.t);
-            if(m.name === 'gift' && (m.data.to === 'ALL' || m.data.to === this.data.user)) {
-                this.data.gold += m.data.v;
-                this.updateUI();
-                this.save();
-            }
-            if(m.name === 'sync') this.upRank(m.data);
-            if(m.name === 'event') this.triggerEvent(m.data);
-        });
-
-        // Loop de sincronização (Envia seus dados para os outros)
-        setInterval(() => {
-            this.chan.publish('sync', { u: this.data.user, l: this.data.lv, w: this.data.world, g: this.data.gold });
-        }, 3000);
-
-        setInterval(() => this.tickEvent(), 1000);
-        this.renderAll();
-        this.updateUI();
+        this.worlds = Array.from({length: 50}, (_, i) => ({
+            n: `Mundo ${i+1}`,
+            req: i * 5, 
+            mult: Math.pow(1.8, i)
+        }));
+        this.renderWorlds();
+        this.renderEggs();
+        this.setupAbly();
     },
 
-    save() {
-        let db = JSON.parse(localStorage.getItem('M50W_GLOBAL_DATA') || '{}');
-        db[this.data.user] = this.data;
-        localStorage.setItem('M50W_GLOBAL_DATA', JSON.stringify(db));
+    f(n) {
+        if(n < 1000) return Math.floor(n);
+        let keys = Object.keys(this.suffixes);
+        let i = Math.floor(Math.log10(n)/3)-1;
+        if (i >= keys.length) return n.toExponential(2);
+        return (n/this.suffixes[keys[i]]).toFixed(2) + keys[i];
+    },
+
+    login() {
+        this.user = document.getElementById('auth-user').value.trim();
+        if(!this.user) return alert("Nome obrigatório!");
+        document.getElementById('auth-screen').style.display = 'none';
+        if(this.channel) this.channel.presence.enter({ user: this.user });
+        this.update();
+    },
+
+    setupAbly() {
+        try {
+            this.ably = new Ably.Realtime('wpgTTw.ROsKoQ:3G5iFq9cMkZppCZ4aicBOwDhAGs69lV0Egd55FistlQ');
+            this.channel = this.ably.channels.get('global-miner');
+            this.channel.subscribe('chat', (m) => {
+                const box = document.getElementById('chat-box');
+                box.innerHTML += `<div><b style="color:var(--acc)">${m.data.user}:</b> ${m.data.msg}</div>`;
+                box.scrollTop = box.scrollHeight;
+            });
+            this.channel.presence.subscribe(() => {
+                this.channel.presence.get((err, members) => {
+                    if(!err) document.getElementById('online-total').innerText = members.length;
+                });
+            });
+        } catch(e) { console.log("Ably Offline"); }
+    },
+
+    sendChat() {
+        let inp = document.getElementById('chat-in');
+        if(!inp.value || !this.channel) return;
+        this.channel.publish('chat', { user: this.user, msg: inp.value });
+        inp.value = "";
     },
 
     mine() {
-        let pwr = 1;
-        this.data.pets.forEach(p => pwr += p.m);
-        this.data.bag += pwr;
+        this.bag += 1;
+        this.xp += 5 * this.xpMulti;
         
-        let xpGain = pwr;
-        if(this.event.active && (this.event.type === 'xp' || this.event.type === 'both')) xpGain *= this.event.mult;
+        let req = 100 * Math.pow(1.2, this.lv);
+        if(this.xp >= req) {
+            this.lv++;
+            this.xp = 0;
+            this.renderWorlds();
+        }
         
-        this.data.xp += xpGain;
-        this.checkLv();
-        this.updateUI();
+        const btn = document.getElementById('mine-btn');
+        btn.style.transform = "scale(0.8)";
+        setTimeout(() => btn.style.transform = "scale(1)", 50);
+        
+        this.update();
     },
 
     sell() {
-        let mult = 50 * Math.pow(25, this.data.world - 1);
-        if(this.event.active && (this.event.type === 'gold' || this.event.type === 'both')) mult *= this.event.mult;
+        let val = this.bag * 100 * this.worlds[this.curWorld].mult * this.multi;
+        this.gold += val;
+        this.bag = 0;
+        this.update();
+    },
+
+    renderWorlds() {
+        document.getElementById('world-list').innerHTML = this.worlds.map((w, i) => {
+            let locked = this.lv < w.req;
+            return `
+                <div class="card ${locked ? 'locked' : ''}">
+                    <span><b>${w.n}</b><br><small>Requer Lv ${w.req}</small></span>
+                    <button class="btn" onclick="game.travel(${i})" ${locked ? 'disabled' : ''}>${locked ? '🔒' : 'VIAJAR'}</button>
+                </div>
+            `;
+        }).join('');
+    },
+
+    travel(i) { 
+        this.curWorld = i; 
+        this.tab('t-mina', document.querySelectorAll('.nav-item')[0]); 
+        this.update(); 
+    },
+
+    renderEggs() {
+        let h = "";
+        for(let i=1; i<=60; i++) {
+            let cost = 1000 * Math.pow(1.6, i);
+            h += `<div class="egg-item" id="egg-${i}">
+                <div onclick="game.buyEgg(${i}, ${cost})" style="cursor:pointer; font-size:24px">🥚</div>
+                <div style="font-size:10px; color:var(--gold); font-weight:bold;">$${this.f(cost)}</div>
+            </div>`;
+        }
+        document.getElementById('egg-grid').innerHTML = h;
+    },
+
+    buyEgg(i, cost) {
+        if(this.gold >= cost && !this.ownedEggs.includes(i)) {
+            this.gold -= cost;
+            this.multi += (i * 0.2);
+            this.ownedEggs.push(i);
+            document.getElementById(`egg-${i}`).classList.add('owned');
+            this.update();
+        }
+    },
+
+    buyXpUp() {
+        let cost = 1000 * Math.pow(2.2, this.xpMulti);
+        if(this.gold >= cost) {
+            this.gold -= cost;
+            this.xpMulti += 1;
+            document.getElementById('btn-up-xp').innerText = `UP: $${this.f(1000 * Math.pow(2.2, this.xpMulti))}`;
+            this.update();
+        }
+    },
+
+    buySpeedUp() {
+        let currentLevel = (1000 - this.autoSpeed) / 100;
+        let cost = 5000 * Math.pow(3, currentLevel);
+        if(this.gold >= cost && this.autoSpeed > 100) {
+            this.gold -= cost;
+            this.autoSpeed -= 100;
+            document.getElementById('auto-info').innerText = `Atual: ${(this.autoSpeed/1000).toFixed(1)}s`;
+            document.getElementById('btn-up-speed').innerText = `UP: $${this.f(5000 * Math.pow(3, currentLevel + 1))}`;
+            if(this.loop) this.toggleAuto(); // Reinicia se estiver ativo
+            this.update();
+        }
+    },
+
+    toggleAuto() {
+        clearInterval(this.loop);
+        if(document.getElementById('auto-click').checked) {
+            this.loop = setInterval(() => this.mine(), this.autoSpeed);
+        } else {
+            this.loop = null;
+        }
+    },
+
+    update() {
+        document.getElementById('h-gold').innerText = this.f(this.gold);
+        document.getElementById('h-bag').innerText = this.bag;
+        document.getElementById('h-lv').innerText = this.lv;
+        document.getElementById('h-multi').innerText = `Multi: ${this.multi.toFixed(1)}x`;
+        document.getElementById('w-name').innerText = this.worlds[this.curWorld].n;
         
-        this.data.gold += this.data.bag * mult;
-        this.data.bag = 0;
-        this.save();
-        this.updateUI();
-    },
-
-    checkLv() {
-        let next = 100 * Math.pow(this.data.lv, 1.4);
-        if(this.data.xp >= next) {
-            this.data.lv++;
-            this.data.xp = 0;
-            this.data.world = Math.floor((this.data.lv - 1) / 20) + 1;
-            this.save();
-            this.renderAll();
-        }
-    },
-
-    // MULTIPLAYER E ADMIN
-    startEvent() {
-        const d = {
-            n: document.getElementById('evt-title').value || 'Evento',
-            t: parseInt(document.getElementById('evt-time').value) || 60,
-            m: parseFloat(document.getElementById('evt-mult').value) || 2,
-            type: document.getElementById('evt-type').value
-        };
-        this.chan.publish('event', d);
-        document.getElementById('modal-admin').style.display='none';
-    },
-
-    triggerEvent(d) {
-        this.event = { active: true, name: d.n, time: d.t, mult: d.m, type: d.type };
-        document.getElementById('event-banner').style.display = 'block';
-        document.getElementById('evt-name').innerText = d.n.toUpperCase();
-    },
-
-    tickEvent() {
-        if(this.event.active) {
-            this.event.time--;
-            document.getElementById('evt-timer').innerText = this.event.time;
-            if(this.event.time <= 0) {
-                this.event.active = false;
-                document.getElementById('event-banner').style.display = 'none';
-            }
-        }
-    },
-
-    upRank(p) {
-        const i = this.players.findIndex(x => x.u === p.u);
-        if(i > -1) this.players[i] = p; else this.players.push(p);
+        let sellVal = this.bag * 100 * this.worlds[this.curWorld].mult * this.multi;
+        document.getElementById('sell-val').innerText = this.f(sellVal);
         
-        let sel = document.getElementById('adm-target');
-        let current = sel.value;
-        sel.innerHTML = '<option value="ALL">TODOS</option>';
-        this.players.forEach(pl => sel.innerHTML += `<option value="${pl.u}">${pl.u}</option>`);
-        sel.value = current;
+        let req = 100 * Math.pow(1.2, this.lv);
+        document.getElementById('xp-fill').style.width = Math.min(100, (this.xp/req*100)) + "%";
     },
 
-    sendMsg() {
-        let i = document.getElementById('chat-in');
-        if(i.value === '/admin') return document.getElementById('modal-admin').style.display='block';
-        if(!i.value) return;
-        this.chan.publish('chat', { u: this.data.user, t: i.value });
-        i.value = '';
-    },
-
-    addMsg(u, t) {
-        let b = document.getElementById('chat-box');
-        b.innerHTML += `<div><b style="color:var(--acc)">${u}:</b> ${t}</div>`;
-        b.scrollTop = b.scrollHeight;
-    },
-
-    admGive() {
-        let to = document.getElementById('adm-target').value;
-        let v = this.parse(document.getElementById('adm-cash-val').value);
-        this.chan.publish('gift', { to, v });
-    },
-
-    // UI E RENDER
-    updateUI() {
-        document.getElementById('st-money').innerText = this.f(this.data.gold);
-        document.getElementById('st-bag').innerText = this.f(this.data.bag);
-        document.getElementById('st-lv').innerText = this.data.lv;
-        document.getElementById('st-world').innerText = this.data.world;
-        let next = 100 * Math.pow(this.data.lv, 1.4);
-        document.getElementById('xp-bar').style.width = (this.data.xp / next * 100) + "%";
-        document.getElementById('xp-txt').innerText = `${this.f(this.data.xp)} / ${this.f(next)}`;
-        let pwr = 0; this.data.pets.forEach(p=>pwr+=p.m);
-        document.getElementById('pet-summary').innerText = `🐾 ${this.data.pets.length} PETS (+${this.f(pwr)} PWR)`;
-    },
-
-    renderAll() {
-        let w = '';
-        for(let i=1; i<=50; i++) {
-            let req = (i-1) * 20;
-            w += `<div class="game-card ${this.data.lv < req ? 'locked' : ''}"><b>MUNDO ${i}</b><br><small>REQ LV ${req}</small></div>`;
-        }
-        document.getElementById('world-list').innerHTML = w;
-
-        let e = '';
-        for(let i=1; i<=30; i++) {
-            let cost = 1000 * Math.pow(12, i-1);
-            e += `<div class="game-card">🥚 OVO ${i}<br><button class="btn btn-main" onclick="core.buyEgg(${i})">$${this.f(cost)}</button></div>`;
-        }
-        document.getElementById('egg-list').innerHTML = e;
-    },
-
-    buyEgg(i) {
-        let cost = 1000 * Math.pow(12, i-1);
-        if(this.data.gold >= cost) {
-            this.data.gold -= cost;
-            this.data.pets.push({ m: Math.pow(8, i-1) * 25 });
-            this.save();
-            this.updateUI();
-        }
-    },
-
-    tab(id, el) {
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-        document.getElementById(id).classList.add('active'); el.classList.add('active');
-        if(id === 'tab-rank') {
-            document.getElementById('rank-body').innerHTML = this.players.sort((a,b)=>b.g - a.g).map(p=>`
-                <tr><td>${p.u}</td><td>${p.l}</td><td>${p.w}</td><td style="color:var(--gold)">$${this.f(p.g)}</td></tr>
-            `).join('');
-        }
+    tab(id, btn) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(btn) btn.classList.add('active');
     }
 };
+
+window.onload = () => game.init();
 </script>
 </body>
 </html>
