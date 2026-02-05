@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MINER V2.7.3 - ADMIN & EVENTS</title>
+    <title>MINER V2.9 - TRADES & CUSTOM PETS</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
@@ -25,34 +25,36 @@
         .prog-fill { height: 100%; background: linear-gradient(90deg, var(--acc), var(--blue)); width: 0%; transition: 0.2s; }
         .prog-text { position: absolute; width: 100%; text-align: center; top: 0px; font-weight: bold; font-size: 11px; text-shadow: 1px 1px #000; }
 
-        .main { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; /* Aumentado para não bugar no fundo */ }
-        .tab { display: none; height: auto; }
+        .main { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
+        .tab { display: none; }
         .tab.active { display: block; }
 
         .grid-inv { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; background: #080810; padding: 10px; border-radius: 8px; max-height: 300px; overflow-y: auto; border: 1px solid #222; }
         .item-card { background: #1a1a2e; padding: 8px; border-radius: 6px; text-align: center; border-bottom: 3px solid #333; cursor: pointer; position: relative; }
         
         #chat-content { height: 200px; background: #000; border: 1px solid #222; overflow-y: auto; padding: 10px; font-size: 13px; margin-bottom: 5px; border-radius: 5px; }
-        .chat-line b { color: var(--blue); cursor: pointer; }
+        .chat-line b { color: var(--blue); cursor: pointer; text-decoration: underline; }
 
         .btn { background: var(--acc); color: #000; font-weight: 700; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; transition: 0.2s; margin-top: 5px; }
         
-        /* FIX: Navegação fixa com fundo sólido e z-index alto */
-        nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #000 !important; display: flex; border-top: 2px solid var(--acc); z-index: 9999; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.5; position: relative; cursor: pointer; background: #000; }
+        nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #000; display: flex; border-top: 2px solid var(--acc); z-index: 9999; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.5; position: relative; cursor: pointer; }
         .nav-item.active { opacity: 1; color: var(--acc); }
         .badge { position: absolute; top: 12px; right: 30%; width: 10px; height: 10px; background: var(--red); border-radius: 50%; display: none; }
 
-        #admin-panel { position: fixed; inset: 0; background: #050505; z-index: 10000; padding: 20px; display: none; overflow-y: auto; }
-        .admin-sec { background: #111; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--red); }
+        #admin-panel, #trade-panel { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; padding: 20px; display: none; overflow-y: auto; }
+        .admin-sec, .trade-sec { background: #111; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--red); }
         input, select { background: #222; border: 1px solid #444; padding: 8px; color: #fff; width: 100%; margin: 5px 0; border-radius: 4px; }
+        
+        .trade-offer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .offer-box { background: #080808; padding: 10px; border: 1px solid #333; min-height: 100px; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
     <div class="auth-card">
-        <h2 style="font-family: Orbitron; color: var(--acc);">MINER V2.7.3</h2>
+        <h2 style="font-family: Orbitron; color: var(--acc);">MINER V2.9</h2>
         <input id="user" placeholder="NICKNAME" maxlength="12">
         <input id="pass" type="password" placeholder="SENHA">
         <button class="btn" onclick="game.start()">LOGAR / CRIAR</button>
@@ -60,36 +62,63 @@
 </div>
 
 <div id="admin-panel">
-    <h2 style="color:var(--red); text-align:center; font-family:Orbitron;">MASTER ADMIN</h2>
+    <h2 style="color:var(--red); text-align:center; font-family:Orbitron;">MASTER ADMIN V2.9</h2>
     <div class="admin-sec">
         <label>ALVO GERAL:</label>
         <select id="adm-target"></select>
+        <input type="number" id="adm-val" placeholder="Valor Ouro/XP">
         <div style="display:flex; gap:5px;">
-            <input type="number" id="adm-val" placeholder="Valor">
             <button class="btn" onclick="game.admGift('gold')">DAR OURO</button>
             <button class="btn" style="background:var(--blue)" onclick="game.admGift('xp')">DAR XP</button>
         </div>
     </div>
     <div class="admin-sec">
-        <label>DAR PET (USA O ALVO ACIMA):</label>
+        <label>CRIAR PET CUSTOMIZADO:</label>
+        <input id="adm-pet-name" placeholder="Nome do Pet">
         <div style="display:flex; gap:5px;">
             <select id="adm-pet-emoji" style="flex:1"></select>
-            <input type="number" id="adm-pet-qty" placeholder="Qtd" style="width:60px">
-            <input type="number" id="adm-pet-pwr" placeholder="Pwr" style="width:80px">
+            <input type="number" id="adm-pet-qty" placeholder="Qtd" style="width:60px" value="1">
+            <input type="number" id="adm-pet-pwr" placeholder="Pwr (Ex: 1000000)">
         </div>
-        <button class="btn" style="background:var(--purp)" onclick="game.admGift('pet')">GERAR PETS</button>
+        <button class="btn" style="background:var(--purp)" onclick="game.admGift('pet')">GERAR E ENVIAR PET</button>
     </div>
     <div class="admin-sec">
-        <label>CRIAR EVENTO GLOBAL:</label>
+        <label>EVENTO GLOBAL:</label>
         <input id="ev-name" placeholder="Nome do Evento">
-        <input type="number" id="ev-dur" placeholder="Duração (segundos)">
+        <input type="number" id="ev-dur" placeholder="Segundos">
         <div style="display:flex; gap:5px;">
             <input type="number" id="ev-mxp" placeholder="Mult XP" step="0.1">
             <input type="number" id="ev-mgold" placeholder="Mult Ouro" step="0.1">
         </div>
         <button class="btn" style="background:var(--gold); color:#000" onclick="game.admStartEvent()">LANÇAR EVENTO</button>
     </div>
-    <button class="btn" style="background:#222;" onclick="document.getElementById('admin-panel').style.display='none'">SAIR DO PAINEL</button>
+    <button class="btn" style="background:#333;" onclick="document.getElementById('admin-panel').style.display='none'">FECHAR PAINEL</button>
+</div>
+
+<div id="trade-panel">
+    <h2 style="color:var(--blue); text-align:center; font-family:Orbitron;">SISTEMA DE TROCAS</h2>
+    <div class="trade-sec">
+        <p>Negociando com: <b id="trade-with-name">---</b></p>
+        <div class="trade-offer">
+            <div class="offer-box">
+                <p style="color:var(--acc)">VOCÊ OFERECE:</p>
+                <div id="my-offer-list"></div>
+            </div>
+            <div class="offer-box">
+                <p style="color:var(--red)">ELES OFERECEM:</p>
+                <div id="their-offer-list"></div>
+            </div>
+        </div>
+        <div id="trade-controls">
+            <input type="number" id="trade-gold-val" placeholder="Ouro para oferecer">
+            <button class="btn" onclick="game.addTradeItem('gold')">ADICIONAR OURO</button>
+            <div id="trade-inv-select" class="grid-inv" style="height:120px; margin-top:10px;"></div>
+            <div style="display:flex; gap:5px; margin-top:10px;">
+                <button class="btn" style="background:var(--acc)" onclick="game.confirmTrade()">ACEITAR TROCA</button>
+                <button class="btn" style="background:var(--red)" onclick="game.cancelTrade()">RECUSAR/CANCELAR</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <header>
@@ -116,27 +145,31 @@
     </div>
 
     <div id="t-inv" class="tab">
-        <h4 id="inv-title" style="color:var(--acc)">INVENTÁRIO (SOMA PWR: 0)</h4>
+        <h4 id="inv-title" style="color:var(--acc)">INVENTÁRIO</h4>
         <div id="full-inv" class="grid-inv"></div>
-        <h4 style="color:var(--gold); margin-top:15px;">LOJA DE PETS | QTY: <select id="buy-qty" style="width:50px; display:inline;"><option>1</option><option>10</option></select></h4>
+        
+        <h4 style="color:var(--gold); margin-top:15px;">LOJA DE PETS | QTD: 
+            <select id="buy-qty" style="width:70px; display:inline;">
+                <option value="1">1</option>
+                <option value="10">10</option>
+                <option value="50">50</option>
+            </select>
+        </h4>
         <div id="store-list" style="max-height: 150px; overflow-y: auto;"></div>
-        <h4 style="color:var(--blue); margin-top:10px;">POÇÕES (TIER I - X)</h4>
+        
+        <h4 style="color:var(--blue); margin-top:15px;">LOJA DE POÇÕES (PREÇOS ABAIXO)</h4>
         <div id="potion-store" class="grid-inv"></div>
     </div>
 
     <div id="t-social" class="tab">
         <div id="chat-content"></div>
         <div style="display:flex; gap:5px; margin-bottom: 10px;">
-            <input id="chat-msg" style="flex:1" placeholder="Fale no global...">
+            <input id="chat-msg" style="flex:1" placeholder="Clique no nome para trocar...">
             <button class="btn" style="width:auto; margin:0" onclick="game.sendChat()">ENVIAR</button>
         </div>
         <div id="rank-area">
-            <table style="width:100%; font-size:12px; text-align:left; border-collapse: collapse;">
-                <thead>
-                    <tr style="color:var(--acc); border-bottom: 1px solid #333;">
-                        <th>NICK</th><th>MUNDO</th><th>RB</th><th>OURO</th>
-                    </tr>
-                </thead>
+            <table style="width:100%; font-size:12px; text-align:left;">
+                <thead><tr style="color:var(--acc)"><th>NICK</th><th>MUNDO</th><th>RB</th><th>OURO</th></tr></thead>
                 <tbody id="rank-list"></tbody>
             </table>
         </div>
@@ -150,19 +183,18 @@
 </nav>
 
 <script>
-// O SCRIPT PERMANECE O MESMO DA VERSÃO ANTERIOR (V2.7.3)
 const game = {
     data: { u:'', p:'', gold:0, bag:0, w:1, lv:0, rb:0, trb:0, inv:[], activePots:{} },
-    suffixes: ["", "K", "M", "B", "T", "QD", "QI", "SX", "SP", "OC", "NO", "DC"],
+    suffixes: ["", "K", "M", "B", "T", "QD", "QI", "SX", "SP", "OC", "NO", "DC", "UD", "DD", "TD"],
     petIcons: ["🐶","🐺","🐱","🦁","🐯","🦒","🦊","🦝","🐮","🐷","🐨","🐻","🐼","🐸","🐲","🦖","👾","🤖","🛸","💎"],
-    players: {}, event: null,
+    players: {}, event: null, trade: null,
 
     start() {
         const u = document.getElementById('user').value.trim().toUpperCase();
         const p = document.getElementById('pass').value.trim();
         if(u.length < 3) return alert("Nick curto!");
         this.data.u = u; this.data.p = p;
-        let save = localStorage.getItem('MINER_V273_'+u);
+        let save = localStorage.getItem('MINER_V29_'+u);
         if(save) {
             let d = JSON.parse(save);
             if(d.p === p) this.data = {...this.data, ...d};
@@ -178,22 +210,53 @@ const game = {
 
     initNet() {
         this.ably = new Ably.Realtime({ key: 'UhNj3w.aNaMJw:_GCHvcVsSZqK40m3oBBWiYisU6Sc2j6QU7mcD2QNI48', clientId: this.data.u });
-        this.ch = this.ably.channels.get('global_v27');
+        this.ch = this.ably.channels.get('global_v29');
         this.ch.subscribe('action', m => {
             const d = m.data;
             if(d.type === 'chat') {
                 const c = document.getElementById('chat-content');
-                c.innerHTML += `<div class="chat-line"><b>${d.u}</b>: ${d.t}</div>`;
+                c.innerHTML += `<div class="chat-line"><b onclick="game.requestTrade('${d.u}')">${d.u}</b>: ${d.t}</div>`;
                 c.scrollTop = c.scrollHeight;
                 if(!document.getElementById('t-social').classList.contains('active')) document.getElementById('chat-badge').style.display = 'block';
             }
             if(d.type === 'sync') { this.players[d.u] = d; this.drawRank(); }
             if(d.type === 'ev_start') { this.event = d.ev; }
+            
+            // Lógica de Trade Net
             if(d.target === this.data.u) {
+                if(d.type === 'trade_req') {
+                    if(confirm(`${d.u} quer trocar com você. Aceitar?`)) {
+                        this.trade = { with: d.u, me: { gold:0, items:[] }, them: { gold:0, items:[] }, accepted: false };
+                        this.ch.publish('action', { type: 'trade_accept', target: d.u, u: this.data.u });
+                        this.openTradeUI();
+                    } else {
+                        this.ch.publish('action', { type: 'trade_decline', target: d.u, u: this.data.u });
+                    }
+                }
+                if(d.type === 'trade_accept') {
+                    this.trade = { with: d.u, me: { gold:0, items:[] }, them: { gold:0, items:[] }, accepted: false };
+                    this.openTradeUI();
+                }
+                if(d.type === 'trade_update') {
+                    this.trade.them = d.offer;
+                    this.updateTradeUI();
+                }
+                if(d.type === 'trade_confirm') {
+                    this.trade.themConfirmed = true;
+                    if(this.trade.meConfirmed) this.finalizeTrade();
+                    else this.updateTradeUI();
+                }
+                if(d.type === 'trade_cancel') {
+                    alert("A troca foi cancelada.");
+                    this.trade = null;
+                    document.getElementById('trade-panel').style.display = 'none';
+                }
+                
+                // Admin Actions
                 if(d.type === 'adm_gold') this.data.gold += d.val;
                 if(d.type === 'adm_xp') this.data.lv += d.val;
                 if(d.type === 'adm_pet') {
-                    for(let i=0; i<d.qty; i++) this.data.inv.push({ id:Math.random().toString(36), type:'pet', name:'ADMIN PET', icon:d.icon, power:d.pwr, tier:10 });
+                    for(let i=0; i<d.qty; i++) this.data.inv.push({ id:Math.random().toString(36), type:'pet', name:d.name, icon:d.icon, power:d.pwr, tier:10 });
                 }
                 this.update();
             }
@@ -209,13 +272,13 @@ const game = {
     mine() {
         let evMult = (this.event && this.event.mxp) ? this.event.mxp : 1;
         let potMult = this.data.activePots['XP'] ? this.data.activePots['XP'].p : 1;
-        let pwr = 1 + (this.data.trb * 5);
+        let pwr = 1 + (this.data.trb * 50); // Buffado de 5 para 50
         this.data.inv.forEach(i => { if(i.type === 'pet') pwr += i.power; });
         this.data.bag += pwr;
-        this.data.lv += ((10 / (this.data.w * 2)) * potMult) * evMult;
+        this.data.lv += ((15 / (this.data.w * 2)) * potMult) * evMult;
         if(this.data.lv >= 100) {
             this.data.rb++; this.data.trb++;
-            if(this.data.rb >= (this.data.w * 3)) { if(this.data.w < 50) this.data.w++; this.data.rb = 0; }
+            if(this.data.rb >= (this.data.w * 3)) { if(this.data.w < 100) this.data.w++; this.data.rb = 0; }
             this.data.lv = 0;
             this.update();
         }
@@ -224,7 +287,7 @@ const game = {
     sell() {
         let evMult = (this.event && this.event.mgold) ? this.event.mgold : 1;
         let potMult = this.data.activePots['GOLD'] ? this.data.activePots['GOLD'].p : 1;
-        this.data.gold += (this.data.bag * (this.data.w * 50)) * potMult * evMult;
+        this.data.gold += (this.data.bag * (this.data.w * 100)) * potMult * evMult;
         this.data.bag = 0;
     },
 
@@ -233,15 +296,17 @@ const game = {
         let cost = (Math.pow(w, 5) * 15000 * Math.pow(20, t)) * q;
         if(this.data.gold < cost) return alert("Ouro insuficiente!");
         this.data.gold -= cost;
-        for(let i=0; i<q; i++) this.data.inv.push({ id:Math.random().toString(36), type:'pet', name:`PET M${w}`, icon:this.petIcons[w%20], power:(w*30)*Math.pow(2.2, t), tier:t+1 });
+        // PETS MUITO MAIS FORTES: Multiplicador de tier subiu de 2.2 para 15.0
+        for(let i=0; i<q; i++) this.data.inv.push({ id:Math.random().toString(36), type:'pet', name:`PET M${w}`, icon:this.petIcons[w%20], power:(w*500)*Math.pow(15.0, t), tier:t+1 });
         this.update();
     },
 
     buyPot(eff, t) {
-        let cost = 100000 * Math.pow(8, t);
+        let q = parseInt(document.getElementById('buy-qty').value);
+        let cost = (100000 * Math.pow(8, t)) * q;
         if(this.data.gold < cost) return alert("Ouro insuficiente!");
         this.data.gold -= cost;
-        this.data.inv.push({ id:Math.random().toString(36), type:'pot', name:`POT ${eff} T${t+1}`, effect:eff, p:(t+1)*2, dur:60*(t+1), tier:t+1 });
+        for(let i=0; i<q; i++) this.data.inv.push({ id:Math.random().toString(36), type:'pot', name:`POT ${eff} T${t+1}`, effect:eff, p:(t+1)*5, dur:120*(t+1), tier:t+1 });
         this.update();
     },
 
@@ -249,7 +314,7 @@ const game = {
         let totalPwr = 0; let stacked = {};
         this.data.inv.forEach(i => {
             if(i.type === 'pet') totalPwr += i.power;
-            let k = i.name + i.tier;
+            let k = i.name + i.tier + (i.power || 0);
             if(!stacked[k]) stacked[k] = { ...i, count: 1 };
             else stacked[k].count++;
         });
@@ -257,24 +322,29 @@ const game = {
         document.getElementById('full-inv').innerHTML = Object.values(stacked).map(i => `
             <div class="item-card" onclick="game.usePot('${i.name}', ${i.tier})">
                 <div style="font-size:20px">${i.type==='pet'?i.icon:'🧪'}</div>
-                <span>${i.name} x${i.count}</span>
-                <small>${i.type==='pet' ? 'PWR: '+this.f(i.power) : 'TIER '+i.tier}</small>
+                <small>${i.name} x${i.count}</small><br>
+                <small>${i.type==='pet' ? 'P:'+this.f(i.power) : 'T'+i.tier}</small>
             </div>`).join('') || "Vazio";
+        
         let shopH = "";
         for(let w=1; w <= this.data.w; w++) {
             let b = Math.pow(w, 5) * 15000;
             shopH += `<div style="display:flex; gap:3px; margin-bottom:5px;">
                 <button class="btn" style="font-size:9px" onclick="game.buyPet(${w},0)">M${w}: ${this.f(b)}</button>
-                <button class="btn" style="font-size:9px; background:var(--purp)" onclick="game.buyPet(${w},2)">EPIC: ${this.f(b*400)}</button>
+                <button class="btn" style="background:var(--purp); font-size:9px" onclick="game.buyPet(${w},2)">EPIC: ${this.f(b*400)}</button>
             </div>`;
         }
         document.getElementById('store-list').innerHTML = shopH;
+        
         let potH = "";
         ['XP', 'GOLD'].forEach(e => {
-            for(let t=0; t<10; t++) potH += `<div class="item-card" onclick="game.buyPot('${e}', ${t})">🧪<span>${e} ${t+1}</span></div>`;
+            for(let t=0; t<10; t++) {
+                let p = 100000 * Math.pow(8, t);
+                potH += `<div class="item-card" onclick="game.buyPot('${e}', ${t})">🧪<br><small>${e} ${t+1}</small><br><b style="font-size:9px; color:var(--gold)">${this.f(p)}</b></div>`;
+            }
         });
         document.getElementById('potion-store').innerHTML = potH;
-        localStorage.setItem('MINER_V273_'+this.data.u, JSON.stringify(this.data));
+        localStorage.setItem('MINER_V29_'+this.data.u, JSON.stringify(this.data));
     },
 
     usePot(name, tier) {
@@ -282,6 +352,75 @@ const game = {
         if(idx === -1) return;
         let it = this.data.inv.splice(idx, 1)[0];
         this.data.activePots[it.effect] = { p: it.p, end: Date.now() + (it.dur * 1000) };
+        this.update();
+    },
+
+    // --- SISTEMA DE TRADE ---
+    requestTrade(nick) {
+        if(nick === this.data.u) return;
+        alert("Pedido de troca enviado para " + nick);
+        this.ch.publish('action', { type: 'trade_req', target: nick, u: this.data.u });
+    },
+    openTradeUI() {
+        document.getElementById('trade-panel').style.display = 'block';
+        document.getElementById('trade-with-name').innerText = this.trade.with;
+        this.updateTradeUI();
+    },
+    updateTradeUI() {
+        const myBox = document.getElementById('my-offer-list');
+        const theirBox = document.getElementById('their-offer-list');
+        myBox.innerHTML = `💰 ${this.f(this.trade.me.gold)}<br>` + this.trade.me.items.map(i => `${i.icon||'🧪'} ${i.name}`).join('<br>');
+        theirBox.innerHTML = `💰 ${this.f(this.trade.them.gold)}<br>` + this.trade.them.items.map(i => `${i.icon||'🧪'} ${i.name}`).join('<br>');
+        
+        let invH = this.data.inv.map((item, idx) => `
+            <div class="item-card" onclick="game.addTradeItem(${idx})" style="padding:4px; font-size:10px;">
+                ${item.icon||'🧪'} ${item.name}
+            </div>`).join('');
+        document.getElementById('trade-inv-select').innerHTML = invH;
+    },
+    addTradeItem(val) {
+        if(val === 'gold') {
+            let amount = parseFloat(document.getElementById('trade-gold-val').value) || 0;
+            if(amount > this.data.gold) return alert("Você não tem esse ouro!");
+            this.trade.me.gold = amount;
+        } else {
+            let item = this.data.inv[val];
+            if(this.trade.me.items.length >= 6) return alert("Máximo 6 itens!");
+            this.trade.me.items.push({...item, originalIdx: val});
+        }
+        this.syncTrade();
+    },
+    syncTrade() {
+        this.ch.publish('action', { type: 'trade_update', target: this.trade.with, offer: this.trade.me });
+        this.updateTradeUI();
+    },
+    confirmTrade() {
+        this.trade.meConfirmed = true;
+        this.ch.publish('action', { type: 'trade_confirm', target: this.trade.with, u: this.data.u });
+        if(this.trade.themConfirmed) this.finalizeTrade();
+        else alert("Aguardando confirmação do outro jogador...");
+    },
+    cancelTrade() {
+        if(this.trade) this.ch.publish('action', { type: 'trade_cancel', target: this.trade.with });
+        this.trade = null;
+        document.getElementById('trade-panel').style.display = 'none';
+    },
+    finalizeTrade() {
+        // Remove meus itens
+        this.data.gold -= this.trade.me.gold;
+        let indicesToRemove = this.trade.me.items.map(i => i.originalIdx).sort((a,b) => b-a);
+        indicesToRemove.forEach(idx => this.data.inv.splice(idx, 1));
+        
+        // Adiciona itens deles
+        this.data.gold += this.trade.them.gold;
+        this.trade.them.items.forEach(i => {
+            delete i.originalIdx;
+            this.data.inv.push(i);
+        });
+        
+        alert("Troca realizada com sucesso!");
+        this.trade = null;
+        document.getElementById('trade-panel').style.display = 'none';
         this.update();
     },
 
@@ -327,13 +466,15 @@ const game = {
     admGift(type) {
         let target = document.getElementById('adm-target').value;
         if(!target) return alert("Selecione um alvo!");
-        let val = parseFloat(document.getElementById('adm-val').value) || 0;
         let payload = { type: 'adm_'+type, target: target };
         if(type === 'pet') {
+            payload.name = document.getElementById('adm-pet-name').value || "ADMIN PET";
             payload.icon = document.getElementById('adm-pet-emoji').value;
             payload.qty = parseInt(document.getElementById('adm-pet-qty').value);
-            payload.pwr = parseFloat(document.getElementById('adm-pet-pwr').value);
-        } else { payload.val = val; }
+            payload.pwr = parseFloat(document.getElementById('adm-pet-pwr').value) || 1000;
+        } else { 
+            payload.val = parseFloat(document.getElementById('adm-val').value) || 0; 
+        }
         this.ch.publish('action', payload);
     },
 
@@ -350,12 +491,7 @@ const game = {
     drawRank() {
         let sorted = Object.values(this.players).sort((a,b) => b.g - a.g).slice(0, 10);
         document.getElementById('rank-list').innerHTML = sorted.map(p => `
-            <tr style="border-bottom: 1px solid #111;">
-                <td>${p.u}</td>
-                <td>${p.w}</td>
-                <td>${p.rb}</td>
-                <td style="color:var(--gold)">${this.f(p.g)}</td>
-            </tr>`).join('');
+            <tr><td>${p.u}</td><td>${p.w}</td><td>${p.rb}</td><td style="color:var(--gold)">${this.f(p.g)}</td></tr>`).join('');
     },
 
     sync() { if(this.ch) this.ch.publish('action', { type: 'sync', u: this.data.u, g: this.data.gold, w: this.data.w, rb: this.data.trb }); },
